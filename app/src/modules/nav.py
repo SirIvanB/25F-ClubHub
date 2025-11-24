@@ -32,15 +32,25 @@ def MapDemoNav():
 
 
 ## ------------------------ Examples for Role of usaid_worker ------------------------
+
+def usaidWorkerHomeNav():
+    st.sidebar.page_link(
+      "pages/10_USAID_Worker_Home.py", label="USAID Worker Home", icon="🏠"
+    )
+
+def NgoDirectoryNav():
+    st.sidebar.page_link("pages/14_NGO_Directory.py", label="NGO Directory", icon="📁")
+
+def AddNgoNav():
+    st.sidebar.page_link("pages/15_Add_NGO.py", label="Add New NGO", icon="➕")
+
 def ApiTestNav():
     st.sidebar.page_link("pages/12_API_Test.py", label="Test the API", icon="🛜")
-
 
 def PredictionNav():
     st.sidebar.page_link(
         "pages/11_Prediction.py", label="Regression Prediction", icon="📈"
     )
-
 
 def ClassificationNav():
     st.sidebar.page_link(
@@ -48,12 +58,7 @@ def ClassificationNav():
     )
 
 
-def NgoDirectoryNav():
-    st.sidebar.page_link("pages/14_NGO_Directory.py", label="NGO Directory", icon="📁")
 
-
-def AddNgoNav():
-    st.sidebar.page_link("pages/15_Add_NGO.py", label="Add New NGO", icon="➕")
 
 
 #### ------------------------ System Admin Role ------------------------
@@ -93,11 +98,13 @@ def SideBarLinks(show_home=False):
 
         # If the user role is usaid worker, show the Api Testing page
         if st.session_state["role"] == "usaid_worker":
+            usaidWorkerHomeNav()
+            NgoDirectoryNav()
+            AddNgoNav()
             PredictionNav()
             ApiTestNav()
             ClassificationNav()
-            NgoDirectoryNav()
-            AddNgoNav()
+            
 
         # If the user is an administrator, give them access to the administrator pages
         if st.session_state["role"] == "administrator":

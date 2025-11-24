@@ -14,6 +14,16 @@ st.write('')
 st.write('')
 st.write('### What would you like to do today?')
 
+if st.button('View NGO Directory', 
+             type='primary',
+             use_container_width=True):
+  st.switch_page('pages/14_NGO_Directory.py')
+
+if st.button('Add New NGO', 
+             type='primary',
+             use_container_width=True):
+  st.switch_page('pages/15_Add_NGO.py')
+
 if st.button('Predict Value Based on Regression Model', 
              type='primary',
              use_container_width=True):
