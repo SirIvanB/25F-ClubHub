@@ -1,71 +1,224 @@
-DROP DATABASE IF EXISTS ngo_db;
-CREATE DATABASE IF NOT EXISTS ngo_db;
+DROP DATABASE IF EXISTS ClubHub;
+CREATE DATABASE ClubHub;
+USE ClubHub;
 
-USE ngo_db;
 
-
-CREATE TABLE IF NOT EXISTS WorldNGOs (
-    NGO_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    Country VARCHAR(100) NOT NULL,
-    Founding_Year INTEGER,
-    Focus_Area VARCHAR(100),
-    Website VARCHAR(255)
+-- Students Table
+CREATE TABLE Students (
+   studentID INT PRIMARY KEY,
+   email VARCHAR(100) UNIQUE NOT NULL,
+   firstName VARCHAR(50) NOT NULL,
+   lastName VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Projects (
-    Project_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Project_Name VARCHAR(255) NOT NULL,
-    Focus_Area VARCHAR(100),
-    Budget DECIMAL(15, 2),
-    NGO_ID INT,
-    Start_Date DATE,
-    End_Date DATE,
-    FOREIGN KEY (NGO_ID) REFERENCES WorldNGOs(NGO_ID)
+
+-- Majors Table
+CREATE TABLE Majors (
+   majorID INT PRIMARY KEY,
+   name VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Donors (
-    Donor_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Donor_Name VARCHAR(255) NOT NULL,
-    Donor_Type ENUM('Individual', 'Organization') NOT NULL,
-    Donation_Amount DECIMAL(15, 2),
-    NGO_ID INT,
-    FOREIGN KEY (NGO_ID) REFERENCES WorldNGOs(NGO_ID)
+
+-- Minors Table
+CREATE TABLE Minors (
+   minorID INT PRIMARY KEY,
+   name VARCHAR(100) NOT NULL
 );
 
-INSERT INTO WorldNGOs (Name, Country, Founding_Year, Focus_Area, Website)
-VALUES
-('World Wildlife Fund', 'United States', 1961, 'Environmental Conservation', 'https://www.worldwildlife.org'),
-('Doctors Without Borders', 'France', 1971, 'Medical Relief', 'https://www.msf.org'),
-('Oxfam International', 'United Kingdom', 1995, 'Poverty and Inequality', 'https://www.oxfam.org'),
-('Amnesty International', 'United Kingdom', 1961, 'Human Rights', 'https://www.amnesty.org'),
-('Save the Children', 'United States', 1919, 'Child Welfare', 'https://www.savethechildren.org'),
-('Greenpeace', 'Netherlands', 1971, 'Environmental Protection', 'https://www.greenpeace.org'),
-('International Red Cross', 'Switzerland', 1863, 'Humanitarian Aid', 'https://www.icrc.org'),
-('CARE International', 'Switzerland', 1945, 'Global Poverty', 'https://www.care-international.org'),
-('Habitat for Humanity', 'United States', 1976, 'Affordable Housing', 'https://www.habitat.org'),
-('Plan International', 'United Kingdom', 1937, 'Child Rights', 'https://plan-international.org');
 
-INSERT INTO Projects (Project_Name, Focus_Area, Budget, NGO_ID, Start_Date, End_Date)
-VALUES
-('Save the Amazon', 'Environmental Conservation', 5000000.00, 1, '2022-01-01', '2024-12-31'),
-('Emergency Medical Aid in Syria', 'Medical Relief', 3000000.00, 2, '2023-03-01', '2023-12-31'),
-('Education for All', 'Poverty and Inequality', 2000000.00, 3, '2021-06-01', '2025-05-31'),
-('Human Rights Advocacy in Asia', 'Human Rights', 1500000.00, 4, '2022-09-01', '2023-08-31'),
-('Child Nutrition Program', 'Child Welfare', 2500000.00, 5, '2022-01-01', '2024-01-01');
-
-INSERT INTO Donors (Donor_Name, Donor_Type, Donation_Amount, NGO_ID)
-VALUES
-('Bill & Melinda Gates Foundation', 'Organization', 10000000.00, 1),
-('Elon Musk', 'Individual', 5000000.00, 2),
-('Google.org', 'Organization', 2000000.00, 3),
-('Open Society Foundations', 'Organization', 3000000.00, 4),
-('Anonymous Philanthropist', 'Individual', 1000000.00, 5);
-
-CREATE TABLE model1_params (
-    sequence_number INT,
-    beta_vals TEXT
+-- Categories Table (must be created before Clubs due to foreign key)
+CREATE TABLE Categories (
+   categoryID INT PRIMARY KEY,
+   name VARCHAR(100) NOT NULL
 );
 
-INSERT INTO model1_params (sequence_number, beta_vals) VALUES
-(1, '[0.25, 0.45, 0.67]');
+
+-- Clubs Table
+CREATE TABLE Clubs (
+   clubID INT PRIMARY KEY,
+   name VARCHAR(100) NOT NULL,
+   email VARCHAR(100),
+   adviser VARCHAR(100),
+   categoryID INT,
+   FOREIGN KEY (categoryID) REFERENCES Categories(categoryID)
+);
+
+
+-- Events Table
+CREATE TABLE Events (
+   eventID INT PRIMARY KEY,
+   name VARCHAR(100) NOT NULL,
+   description TEXT,
+   searchDescription TEXT,
+   startDateTime DATETIME NOT NULL,
+   endDateTime DATETIME,
+   authID INT,
+   clubID INT,
+   FOREIGN KEY (clubID) REFERENCES Clubs(clubID)
+);
+
+
+-- Locations Table
+CREATE TABLE Locations (
+   locationID INT PRIMARY KEY,
+   capacity INT,
+   buildingName VARCHAR(100),
+   buildingNumber VARCHAR(20),
+   floorNumber INT
+);
+
+
+-- Servers Table
+CREATE TABLE Servers (
+   serverID INT PRIMARY KEY,
+   status VARCHAR(50),
+   ipAddress VARCHAR(45),
+   lastUpdated DATETIME
+);
+
+
+-- Keywords Table
+CREATE TABLE Keywords (
+   keywordID INT PRIMARY KEY,
+   keyword VARCHAR(100) NOT NULL
+);
+
+
+-- EventLog Table
+CREATE TABLE EventLog (
+   logID INT PRIMARY KEY,
+   logTimestamp DATETIME NOT NULL,
+   status VARCHAR(50),
+   severity VARCHAR(50),
+   serverID INT,
+   FOREIGN KEY (serverID) REFERENCES Servers(serverID)
+);
+
+
+-- Administrators Table
+CREATE TABLE Administrators (
+   adminID INT PRIMARY KEY,
+   email VARCHAR(100) UNIQUE NOT NULL,
+   firstName VARCHAR(50),
+   lastName VARCHAR(50)
+);
+
+
+-- Students-Majors (Many-to-Many)
+CREATE TABLE Students_Major_Attends (
+   studentID INT NOT NULL,
+   majorID INT NOT NULL,
+   PRIMARY KEY (studentID, majorID),
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE,
+   FOREIGN KEY (majorID) REFERENCES Majors(majorID) ON DELETE CASCADE
+);
+
+
+-- Students-Minors (Many-to-Many)
+CREATE TABLE Students_Minor_Attends (
+   studentID INT NOT NULL,
+   minorID INT NOT NULL,
+   PRIMARY KEY (studentID, minorID),
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE,
+   FOREIGN KEY (minorID) REFERENCES Minors(minorID) ON DELETE CASCADE
+);
+
+
+-- Students-Export Results
+CREATE TABLE Students_Export_Results (
+   studentID INT NOT NULL,
+   exportID INT NOT NULL,
+   PRIMARY KEY (studentID, exportID),
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
+);
+
+
+-- Students-Event Attendees (Many-to-Many)
+CREATE TABLE Students_Event_Attendees (
+   attendanceID INT PRIMARY KEY AUTO_INCREMENT,
+   studentID INT NOT NULL,
+   eventID INT NOT NULL,
+   status VARCHAR(50),
+   timestamp DATETIME,
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE,
+   FOREIGN KEY (eventID) REFERENCES Events(eventID) ON DELETE CASCADE,
+   UNIQUE KEY unique_attendance (studentID, eventID)
+);
+
+
+-- Events-Event Keywords (Many-to-Many)
+CREATE TABLE Events_Event_Keywords (
+   eventID INT NOT NULL,
+   keywordID INT NOT NULL,
+   PRIMARY KEY (eventID, keywordID),
+   FOREIGN KEY (eventID) REFERENCES Events(eventID) ON DELETE CASCADE,
+   FOREIGN KEY (keywordID) REFERENCES Keywords(keywordID) ON DELETE CASCADE
+);
+
+
+-- Schedule Changes (weak entity dependent on Locations and Events)
+CREATE TABLE Schedule_Changes (
+   changeID INT PRIMARY KEY AUTO_INCREMENT,
+   eventID INT NOT NULL,
+   oldLocation VARCHAR(100),
+   newLocation VARCHAR(100),
+   locationID INT NOT NULL,
+   FOREIGN KEY (eventID) REFERENCES Events(eventID) ON DELETE CASCADE,
+   FOREIGN KEY (locationID) REFERENCES Locations(locationID) ON DELETE CASCADE
+);
+
+
+-- Rankings (weak entity dependent on Clubs)
+CREATE TABLE Rankings (
+   rankID INT PRIMARY KEY AUTO_INCREMENT,
+   clubID INT NOT NULL,
+   rankingValue DECIMAL(5,2),
+   rankingType VARCHAR(50),
+   rankingYear INT,
+   rankingQuarter INT,
+   FOREIGN KEY (clubID) REFERENCES Clubs(clubID) ON DELETE CASCADE
+);
+
+
+-- Collaborations (weak entity dependent on Events)
+CREATE TABLE Collaborations (
+   collaborationID INT PRIMARY KEY AUTO_INCREMENT,
+   eventID INT NOT NULL,
+   status VARCHAR(50),
+   clubID INT,
+   FOREIGN KEY (eventID) REFERENCES Events(eventID) ON DELETE CASCADE,
+   FOREIGN KEY (clubID) REFERENCES Clubs(clubID) ON DELETE CASCADE
+);
+
+
+-- Alerts (weak entity dependent on Events)
+CREATE TABLE Alerts (
+   alertID INT PRIMARY KEY AUTO_INCREMENT,
+   eventID INT NOT NULL,
+   studentID INT,
+   alertType VARCHAR(50),
+   isSolved BOOLEAN DEFAULT FALSE,
+   description TEXT,
+   FOREIGN KEY (eventID) REFERENCES Events(eventID) ON DELETE CASCADE,
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
+);
+
+
+-- Major (multivalued attribute)
+CREATE TABLE Major (
+   id INT PRIMARY KEY AUTO_INCREMENT,
+   majorID INT NOT NULL,
+   studentID INT NOT NULL,
+   FOREIGN KEY (majorID) REFERENCES Majors(majorID) ON DELETE CASCADE,
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
+);
+
+
+-- Minor (multivalued attribute)
+CREATE TABLE Minor (
+   id INT PRIMARY KEY AUTO_INCREMENT,
+   minorID INT NOT NULL,
+   studentID INT NOT NULL,
+   FOREIGN KEY (minorID) REFERENCES Minors(minorID) ON DELETE CASCADE,
+   FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
+);
