@@ -4,6 +4,8 @@ flask-restful==0.3.9
 flask-login==0.6.2
 flask-mysql==1.5.2
 mysql-connector==2.2.9
+PyMySQL==1.1.0
 cryptography==38.0.1
 python-dotenv==1.0.1
 numpy==1.26.4
+flask-cors==4.0.0
