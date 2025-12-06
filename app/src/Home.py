@@ -49,7 +49,7 @@ ClubHub is a platform that connects students, club organizers, administrators, a
 to make campus life more organized and engaging.
 """)
 
-st.st.divider()
+st.divider()
 st.write('#### HI! As which user would you like to log in?')
 
 # For each of the user personas for which we are implementing
