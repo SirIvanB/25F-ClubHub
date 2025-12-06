@@ -17,13 +17,7 @@ def get_clubs():
                 c.description,
                 c.category,
                 c.budget,
-<<<<<<< HEAD
-                COUNT(DISTINCT cm.student_id) AS member_count
-            FROM Clubs c
-            LEFT JOIN Club_Memberships cm ON c.club_id = cm.club_id
-=======
             FROM clubs c
->>>>>>> 6cb172f (club-routes)
             GROUP BY c.club_id, c.club_name, c.description, c.category, c.budget
             ORDER BY c.club_name ASC
         """
@@ -77,14 +71,8 @@ def get_club_details(club_id):
                 c.competitiveness_level,
                 c.contact_email,
                 COUNT(DISTINCT e.event_id) AS event_count
-<<<<<<< HEAD
-            FROM Clubs c
-            LEFT JOIN Club_Memberships cm ON c.club_id = cm.club_id
-            LEFT JOIN Events e ON c.club_id = e.club_id
-=======
             FROM clubs c
             LEFT JOIN events e ON c.club_id = e.club_id
->>>>>>> 6cb172f (club-routes)
             WHERE c.club_id = %s
             GROUP BY c.club_id, c.club_name, c.description, c.category, 
                      c.budget, c.benefits, c.competitiveness_level, c.contact_email
@@ -160,12 +148,7 @@ def compare_clubs():
                 c.budget,
                 c.benefits,
                 c.competitiveness_level
-<<<<<<< HEAD
-            FROM Clubs c
-            LEFT JOIN Club_Memberships cm ON c.club_id = cm.club_id
-=======
             FROM clubs c
->>>>>>> 6cb172f (club-routes)
             WHERE c.club_id IN (%s)
             GROUP BY c.club_id, c.club_name, c.description, c.budget, 
                      c.benefits, c.competitiveness_level
@@ -194,18 +177,6 @@ def get_club_rankings():
                 c.budget,
                 COUNT(DISTINCT e.event_id) AS total_events,
                 c.competitiveness_level,
-<<<<<<< HEAD
-                cr.ranking_score,
-                cr.rank_by_budget,
-                cr.rank_by_members,
-                cr.rank_by_events,
-                cr.ranking_period
-            FROM Clubs c
-            LEFT JOIN Club_Memberships cm ON c.club_id = cm.club_id
-            LEFT JOIN Events e ON c.club_id = e.club_id
-            LEFT JOIN Club_Rankings cr ON c.club_id = cr.club_id
-            WHERE cr.ranking_period = %s
-=======
                 r.ranking_score,
                 r.rank_by_budget,
                 r.rank_by_members,
@@ -215,7 +186,6 @@ def get_club_rankings():
             LEFT JOIN events e ON c.club_id = e.club_id
             LEFT JOIN rankings r ON c.club_id = r.club_id
             WHERE r.ranking_period = %s
->>>>>>> 6cb172f (club-routes)
             GROUP BY c.club_id, c.club_name, c.budget, c.competitiveness_level,
                      r.ranking_score, r.rank_by_budget, r.rank_by_members, 
                      r.rank_by_events, r.ranking_period
