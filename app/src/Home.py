@@ -1,3 +1,4 @@
+'''
 ##################################################
 # This is the main/entry-point file for the 
 # sample application for your project
@@ -74,6 +75,96 @@ if st.button('Act as System Administrator',
     st.session_state['role'] = 'administrator'
     st.session_state['first_name'] = 'SysAdmin'
     st.switch_page('pages/20_Admin_Home.py')
+'''
 
+
+# ON TOP IS ORIGINAL HOME PAGE! HERE IS A NEW ONE!
+
+import streamlit as st
+
+# Page config
+st.set_page_config(
+    page_title="ClubHub",
+    page_icon="🎓",
+    layout="wide"
+)
+
+# Title
+st.title("🎓 Welcome to ClubHub")
+st.markdown("### Centralized Campus Event Management Platform")
+st.divider()
+
+# Introduction
+st.markdown("""
+ClubHub is a platform that connects students, club organizers, administrators, and data analysts 
+to make campus life more organized and engaging.
+""")
+
+st.divider()
+
+# Persona Selection
+st.markdown("## 👥 Select Your Role")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.markdown("### 🎒 Student")
+    st.markdown("**Ruth Doe**")
+    st.markdown("*New Student*")
+    st.markdown("""
+    - Discover events
+    - Compare clubs
+    - Manage schedule
+    - Invite friends
+    """)
+    if st.button("Enter as Ruth", use_container_width=True):
+        st.switch_page("pages/1_Ruth_Event_Discovery.py")
+
+with col2:
+    st.markdown("### 📋 Event Coordinator")
+    st.markdown("**Sofia Martinez**")
+    st.markdown("*Club Leader*")
+    st.markdown("""
+    - Publish events
+    - Manage RSVPs
+    - Track attendance
+    - View analytics
+    """)
+    if st.button("Enter as Sofia", use_container_width=True, disabled=True):
+        st.info("Coming soon!")
+
+with col3:
+    st.markdown("### 🔧 Server Admin")
+    st.markdown("**David Kim**")
+    st.markdown("*IT Administrator*")
+    st.markdown("""
+    - Monitor system
+    - View audit logs
+    - Manage alerts
+    - Check metrics
+    """)
+    if st.button("Enter as David", use_container_width=True, disabled=True):
+        st.info("Coming soon!")
+
+with col4:
+    st.markdown("### 📊 Data Analyst")
+    st.markdown("**Marcus Rodriguez**")
+    st.markdown("*Student Affairs*")
+    st.markdown("""
+    - View engagement
+    - Analyze searches
+    - Track demographics
+    - Generate reports
+    """)
+    if st.button("Enter as Marcus", use_container_width=True, disabled=True):
+        st.info("Coming soon!")
+
+st.divider()
+
+# Footer
+st.markdown("""
+---
+**CS 3200 - Database Design Project | Team: Everett and Friends**
+""")
 
 
