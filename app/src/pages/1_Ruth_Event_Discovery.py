@@ -5,7 +5,7 @@ from datetime import datetime
 # Page config
 st.set_page_config(
     page_title="Event Discovery - ClubHub",
-    page_icon="🎉",
+    page_icon="🔎",
     layout="wide")
 
 # API Base URL
@@ -22,7 +22,7 @@ st.sidebar.divider()
 st.sidebar.page_link("Home.py", label="← Back to Home")
 
 # Main page title
-st.title("🎉 Event Discovery")
+st.title("🔎 Event Discovery")
 st.markdown("Find events happening on campus")
 st.divider()
 
@@ -36,7 +36,7 @@ with col1:
     date_filter = st.selectbox("📅 Date", ["All Dates", "Today", "This Week", "This Month"])
 
 with col2:
-    category_filter = st.selectbox("🏷️ Category", ["All Categories", "Academic", "Social", "Sports", "Arts"])
+    category_filter = st.selectbox("📂 Category", ["All Categories", "Academic", "Social", "Sports", "Arts"])
 
 with col3:
     club_filter = st.selectbox("🎯 Club", ["All Clubs", "CS Club", "Latin Union", "Board Games", "Business Club"])
@@ -70,7 +70,7 @@ if search_query:
 
 # Display events in grid
 if not events:
-    st.info("No events found. Try adjusting your filters!")
+    st.info("No events found so far 😢. Try adjusting your filters!")
 else:
     st.markdown(f"**Showing {len(events)} events**")
     

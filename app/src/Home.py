@@ -39,7 +39,7 @@ SideBarLinks(show_home=True)
 # set the title of the page and provide a simple prompt. 
 logger.info("Loading the Home page of the app")
 # Title
-st.title("🎓 Welcome to ClubHub")
+st.title("🎓 Welcome to ClubHub!")
 st.markdown("### Centralized Campus Event Management Platform")
 st.divider()
 

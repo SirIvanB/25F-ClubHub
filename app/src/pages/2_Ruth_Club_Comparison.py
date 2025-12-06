@@ -24,7 +24,7 @@ st.sidebar.page_link("Home.py", label="← Back to Home")
 
 # Main page title
 st.title("⚖️ Club Comparison")
-st.markdown("Compare clubs side-by-side to find the best fit")
+st.markdown("Try comparing your clubs side-by-side to find the best fit 🧐")
 st.divider()
 
 # Fetch all clubs
