@@ -222,3 +222,18 @@ CREATE TABLE Minor (
    FOREIGN KEY (minorID) REFERENCES Minors(minorID) ON DELETE CASCADE,
    FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
 );
+
+-- Event Invitations (entity)
+CREATE TABLE event_invitations (
+    invitation_id INT PRIMARY KEY,
+    event_id INT NOT NULL,
+    sender_student_id INT NOT NULL,
+    recipient_student_id INT NOT NULL,
+    invitation_status VARCHAR(20) NOT NULL,
+    sent_datetime DATETIME NOT NULL,
+      FOREIGN KEY (event_id) REFERENCES Events(eventID)
+        ON DELETE CASCADE,
+    FOREIGN KEY (sender_student_id) REFERENCES Students(studentID)
+        ON DELETE CASCADE,
+    FOREIGN KEY (recipient_student_id) REFERENCES Students(studentID)
+        ON DELETE CASCADE);
