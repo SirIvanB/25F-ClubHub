@@ -16,6 +16,7 @@ def get_current_period_metrics():
         
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)
+        start_date_str = start_date.strftime('%Y-%m-%d %H:%M:%S')
         
         query = """
             SELECT
@@ -35,7 +36,7 @@ def get_current_period_metrics():
             WHERE e.startDateTime >= %s
         """
         
-        cursor.execute(query, (start_date, start_date, start_date))
+        cursor.execute(query, (start_date_str, start_date_str, start_date_str))
         result = cursor.fetchone()
         return jsonify(result), 200
     except Error as e:
@@ -44,6 +45,7 @@ def get_current_period_metrics():
     finally:
         if cursor:
             cursor.close()
+
 
 # GET /analytics/engagement/previous-metrics
 @analytics_routes.route("/analytics/engagement/previous-metrics", methods=["GET"])
@@ -55,6 +57,9 @@ def get_previous_period_metrics():
         # 30-60 days ago
         end_date = datetime.now() - timedelta(days=30)
         start_date = datetime.now() - timedelta(days=60)
+
+        end_date_str = end_date.strftime('%Y-%m-%d %H:%M:%S')
+        start_date_str = start_date.strftime('%Y-%m-%d %H:%M:%S')
         
         query = """
             SELECT
@@ -77,7 +82,7 @@ def get_previous_period_metrics():
               AND e.startDateTime < %s
         """
         
-        cursor.execute(query, (start_date, end_date, start_date, end_date, start_date, end_date))
+        cursor.execute(query, (start_date_str, end_date_str, start_date_str, end_date_str, start_date_str, end_date_str))
         result = cursor.fetchone()
         return jsonify(result), 200
     except Error as e:
@@ -223,6 +228,37 @@ def get_search_query_analysis():
     except Error as e:
         current_app.logger.error(f"Error fetching search query analysis: {e}")
         return jsonify({"error": "Error fetching search query analysis"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+# GET /analytics/search/summary
+@analytics_routes.route("/analytics/search/summary", methods=["GET"])
+def get_search_summary():
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT
+                COUNT(*) as total_searches,
+                COUNT(DISTINCT search_query) as unique_queries,
+                (SELECT COUNT(*) 
+                 FROM SearchLogs 
+                 WHERE search_date >= %s AND results_count = 0) as no_result_searches
+            FROM SearchLogs
+            WHERE search_date >= %s
+        """
+        
+        cursor.execute(query, (start_date, start_date))
+        result = cursor.fetchone()
+        return jsonify(result), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching search summary: {e}")
+        return jsonify({"error": str(e)}), 500
     finally:
         if cursor:
             cursor.close()

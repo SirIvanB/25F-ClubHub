@@ -285,6 +285,31 @@ CREATE TABLE Audit_Logs (
    status VARCHAR(50)
 );
 
+-- Searches table
+CREATE TABLE Searches(
+    searchID int PRIMARY KEY,
+    timestamp DATETIME,
+    searchQuery VARCHAR(255),
+    studentID int,
+    FOREIGN KEY (studentID) REFERENCES Students(studentID)
+);
+
+CREATE TABLE Search_Result(
+    resultID int PRIMARY KEY,
+    clicks int,
+    appearances int,
+    eventID int,
+    FOREIGN KEY (eventID) REFERENCES Events(eventID)
+);
+
+-- Searches-Search Results bridge table
+CREATE TABLE Searches_Search_Results(
+    searchID int,
+    resultID int,
+    FOREIGN KEY (searchID) REFERENCES Searches(searchID),
+    FOREIGN KEY (resultID) REFERENCES Search_Result(resultID)
+);
+
 -- Search Logs Table (from teammate's version)
 CREATE TABLE Search_Logs (
    searchLogID INT PRIMARY KEY AUTO_INCREMENT,
@@ -461,19 +486,18 @@ INSERT INTO Locations (locationID, capacity, buildingName, buildingNumber, floor
 
 -- Insert Events (with all fields)
 INSERT INTO Events (eventID, name, description, searchDescription, startDateTime, endDateTime, authID, clubID, capacity, location, buildingName, roomNumber) VALUES
-(70000001, 'Intro to Web Development Workshop', 'Learn the basics of HTML, CSS, and JavaScript', 'web development html css javascript workshop coding', '2024-12-10 18:00:00', '2024-12-10 20:00:00', 10000001, 50000001, 80, 'West Village H 210', 'West Village H', '210'),
-(70000002, 'Winter Dance Showcase', 'Annual performance featuring various dance styles', 'dance performance showcase contemporary hip-hop ballet', '2024-12-15 19:00:00', '2024-12-15 21:30:00', 10000002, 50000002, 200, 'Curry Student Center Ballroom', 'Curry Student Center', 'Ballroom'),
-(70000003, 'Portfolio Management Seminar', 'Expert insights on building an investment portfolio', 'investment finance stocks portfolio wealth management', '2024-12-12 17:00:00', '2024-12-12 19:00:00', 10000003, 50000003, 60, 'Dodge Hall 301', 'Dodge Hall', '301'),
-(70000004, 'Beach Cleanup Day', 'Community service event at Revere Beach', 'environment cleanup volunteer service community beach', '2024-12-08 09:00:00', '2024-12-08 13:00:00', 10000004, 50000004, 50, 'Revere Beach', 'N/A', 'Outdoor'),
-(70000005, 'Debate Tournament Finals', 'Championship round of fall debate competition', 'debate tournament competition public speaking argumentation', '2024-12-14 15:00:00', '2024-12-14 18:00:00', 10000005, 50000005, 100, 'Richards Hall 150', 'Richards Hall', '150'),
-(70000006, 'Soccer Tournament Kickoff', 'First matches of the winter intramural season', 'soccer sports tournament intramural athletics competition', '2024-12-09 14:00:00', '2024-12-09 17:00:00', 10000006, 50000006, 300, 'Cabot Cage Field', 'Cabot Cage', 'Field'),
-(70000007, 'Night Photography Walk', 'Guided tour for capturing Boston at night', 'photography camera night urban cityscape tutorial', '2024-12-11 20:00:00', '2024-12-11 22:30:00', 10000007, 50000007, 25, 'Meet at Snell Library', 'Snell Library', 'Lobby'),
-(70000008, 'MCAT Prep Session', 'Study strategies and practice questions', 'mcat medicine premed medical school test preparation', '2024-12-13 16:00:00', '2024-12-13 18:00:00', 10000008, 50000008, 40, 'Churchill Hall 105', 'Churchill Hall', '105'),
-(70000009, 'Cultural Food Festival', 'Celebrate diversity through international cuisine', 'international culture food diversity festival multicultural', '2024-12-16 12:00:00', '2024-12-16 16:00:00', 10000009, 50000009, 150, 'Ell Hall Plaza', 'Ell Hall', 'Plaza'),
-(70000010, 'Robotics Competition Prep', 'Final preparation for regional competition', 'robotics engineering competition programming stem technology', '2024-12-07 10:00:00', '2024-12-07 14:00:00', 10000010, 50000010, 50, 'Forsyth Building Lab', 'Forsyth Building', '301'),
-(70000011, 'Hackathon 2024', '24-hour coding competition with prizes', 'hackathon coding programming competition innovation software', '2024-12-20 09:00:00', '2024-12-21 09:00:00', 10000001, 50000001, 100, 'West Village H Commons', 'West Village H', 'Commons'),
-(70000012, 'Investment Panel Discussion', 'Alumni share career insights in finance', 'finance career alumni networking investment banking', '2024-12-18 18:30:00', '2024-12-18 20:00:00', 10000003, 50000003, 75, 'Ryder Hall 155', 'Ryder Hall', '155');
-
+(70000001, 'Intro to Web Development Workshop', 'Learn the basics of HTML, CSS, and JavaScript', 'web development html css javascript workshop coding', '2025-11-10 18:00:00', '2025-11-10 20:00:00', 10000001, 50000001, 80, 'West Village H 210', 'West Village H', '210'),
+(70000002, 'Winter Dance Showcase', 'Annual performance featuring various dance styles', 'dance performance showcase contemporary hip-hop ballet', '2025-11-15 19:00:00', '2025-11-15 21:30:00', 10000002, 50000002, 200, 'Curry Student Center Ballroom', 'Curry Student Center', 'Ballroom'),
+(70000003, 'Portfolio Management Seminar', 'Expert insights on building an investment portfolio', 'investment finance stocks portfolio wealth management', '2025-11-12 17:00:00', '2025-11-12 19:00:00', 10000003, 50000003, 60, 'Dodge Hall 301', 'Dodge Hall', '301'),
+(70000004, 'Beach Cleanup Day', 'Community service event at Revere Beach', 'environment cleanup volunteer service community beach', '2025-11-08 09:00:00', '2025-11-08 13:00:00', 10000004, 50000004, 50, 'Revere Beach', 'N/A', 'Outdoor'),
+(70000005, 'Debate Tournament Finals', 'Championship round of fall debate competition', 'debate tournament competition public speaking argumentation', '2025-10-14 15:00:00', '2025-10-14 18:00:00', 10000005, 50000005, 100, 'Richards Hall 150', 'Richards Hall', '150'),
+(70000006, 'Soccer Tournament Kickoff', 'First matches of the winter intramural season', 'soccer sports tournament intramural athletics competition', '2025-10-09 14:00:00', '2025-10-09 17:00:00', 10000006, 50000006, 300, 'Cabot Cage Field', 'Cabot Cage', 'Field'),
+(70000007, 'Night Photography Walk', 'Guided tour for capturing Boston at night', 'photography camera night urban cityscape tutorial', '2025-10-11 20:00:00', '2025-10-11 22:30:00', 10000007, 50000007, 25, 'Meet at Snell Library', 'Snell Library', 'Lobby'),
+(70000008, 'MCAT Prep Session', 'Study strategies and practice questions', 'mcat medicine premed medical school test preparation', '2025-10-13 16:00:00', '2025-10-13 18:00:00', 10000008, 50000008, 40, 'Churchill Hall 105', 'Churchill Hall', '105'),
+(70000009, 'Cultural Food Festival', 'Celebrate diversity through international cuisine', 'international culture food diversity festival multicultural', '2025-09-16 12:00:00', '2025-09-16 16:00:00', 10000009, 50000009, 150, 'Ell Hall Plaza', 'Ell Hall', 'Plaza'),
+(70000010, 'Robotics Competition Prep', 'Final preparation for regional competition', 'robotics engineering competition programming stem technology', '2025-09-07 10:00:00', '2025-09-07 14:00:00', 10000010, 50000010, 50, 'Forsyth Building Lab', 'Forsyth Building', '301'),
+(70000011, 'Hackathon 2024', '24-hour coding competition with prizes', 'hackathon coding programming competition innovation software', '2025-09-20 09:00:00', '2025-09-21 09:00:00', 10000001, 50000001, 100, 'West Village H Commons', 'West Village H', 'Commons'),
+(70000012, 'Investment Panel Discussion', 'Alumni share career insights in finance', 'finance career alumni networking investment banking', '2025-09-18 18:30:00', '2025-09-18 20:00:00', 10000003, 50000003, 75, 'Ryder Hall 155', 'Ryder Hall', '155');
 -- Insert Servers
 INSERT INTO Servers (serverID, status, ipAddress, lastUpdated) VALUES
 (80000001, 'active', '192.168.1.10', '2024-12-06 08:00:00'),
@@ -557,25 +581,27 @@ INSERT INTO Students_Minor_Attends (studentID, minorID) VALUES
 
 -- Insert Students_Event_Attendees
 INSERT INTO Students_Event_Attendees (studentID, eventID, status, timestamp) VALUES
-(10000001, 70000001, 'confirmed', '2024-12-06 10:00:00'),
-(10000001, 70000011, 'confirmed', '2024-12-06 10:30:00'),
-(10000002, 70000003, 'confirmed', '2024-12-06 09:00:00'),
-(10000003, 70000001, 'confirmed', '2024-12-06 11:00:00'),
-(10000003, 70000011, 'waitlisted', '2024-12-06 12:00:00'),
-(10000004, 70000010, 'confirmed', '2024-12-05 15:00:00'),
-(10000005, 70000008, 'confirmed', '2024-12-06 08:00:00'),
-(10000005, 70000004, 'confirmed', '2024-12-05 14:00:00'),
-(10000006, 70000006, 'confirmed', '2024-12-06 13:00:00'),
-(10000007, 70000002, 'confirmed', '2024-12-06 10:00:00'),
-(10000007, 70000009, 'confirmed', '2024-12-06 11:30:00'),
-(10000008, 70000001, 'cancelled', '2024-12-06 09:30:00'),
-(10000009, 70000009, 'confirmed', '2024-12-06 10:00:00'),
-(10000010, 70000005, 'confirmed', '2024-12-06 14:00:00'),
-(10000011, 70000001, 'confirmed', '2024-12-06 11:00:00'),
-(10000012, 70000010, 'confirmed', '2024-12-05 16:00:00'),
-(10000013, 70000008, 'confirmed', '2024-12-06 09:00:00'),
-(10000014, 70000011, 'confirmed', '2024-12-06 13:00:00'),
-(10000015, 70000004, 'confirmed', '2024-12-05 15:00:00');
+(10000001, 70000011, 'confirmed', '2025-09-20 09:15:00'),
+(10000003, 70000011, 'confirmed', '2025-09-20 10:30:00'),
+(10000014, 70000011, 'confirmed', '2025-09-20 11:45:00'),
+(10000002, 70000012, 'confirmed', '2025-09-18 18:45:00'),
+(10000004, 70000010, 'confirmed', '2025-09-07 10:15:00'),
+(10000012, 70000010, 'confirmed', '2025-09-07 11:30:00'),
+(10000007, 70000007, 'confirmed', '2025-10-11 20:15:00'),
+(10000005, 70000008, 'confirmed', '2025-10-13 16:15:00'),
+(10000013, 70000008, 'confirmed', '2025-10-13 16:45:00'),
+(10000007, 70000009, 'confirmed', '2025-10-16 12:30:00'),
+(10000009, 70000009, 'confirmed', '2025-10-16 13:15:00'),
+(10000005, 70000004, 'confirmed', '2025-11-08 09:15:00'),
+(10000015, 70000004, 'confirmed', '2025-11-08 10:30:00'),
+(10000006, 70000006, 'confirmed', '2025-11-09 14:15:00'),
+(10000001, 70000001, 'confirmed', '2025-11-10 18:15:00'),
+(10000003, 70000001, 'confirmed', '2025-11-10 18:30:00'),
+(10000008, 70000001, 'cancelled', '2025-11-10 19:00:00'),
+(10000011, 70000001, 'confirmed', '2025-11-10 18:45:00'),
+(10000002, 70000003, 'confirmed', '2025-11-12 17:15:00'),
+(10000010, 70000005, 'confirmed', '2025-11-14 15:15:00'),
+(10000007, 70000002, 'confirmed', '2025-11-15 19:15:00');
 
 -- Insert Events_Event_Keywords
 INSERT INTO Events_Event_Keywords (eventID, keywordID) VALUES
@@ -675,3 +701,127 @@ INSERT INTO Event_Invitations (eventID, senderStudentID, recipientStudentID, sta
 (70000009, 10000007, 10000009, 'accepted', '2024-12-05 15:00:00'),
 (70000011, 10000001, 10000014, 'accepted', '2024-12-06 08:00:00'),
 (70000011, 10000003, 10000008, 'pending', '2024-12-06 10:00:00');
+
+-- Insert Searches (50 searches over 90 days)
+INSERT INTO Searches (searchID, timestamp, searchQuery, studentID) VALUES
+(1, '2025-09-15 10:30:00', 'web development', 10000001),
+(2, '2025-09-16 14:20:00', 'web development', 10000002),
+(3, '2025-09-18 09:15:00', 'web development', 10000003),
+(4, '2025-10-01 11:00:00', 'web development', 10000004),
+(5, '2025-10-15 16:30:00', 'web development', 10000005),
+(6, '2025-09-20 13:45:00', 'coding', 10000006),
+(7, '2025-10-05 10:20:00', 'coding', 10000007),
+(8, '2025-10-10 15:00:00', 'programming', 10000008),
+(9, '2025-09-12 12:00:00', 'hackathon', 10000009),
+(10, '2025-09-14 14:30:00', 'hackathon', 10000010),
+(11, '2025-10-20 09:00:00', 'soccer', 10000011),
+(12, '2025-10-22 11:30:00', 'soccer', 10000012),
+(13, '2025-11-01 10:00:00', 'sports', 10000013),
+(14, '2025-10-12 13:00:00', 'dance', 10000001),
+(15, '2025-10-25 14:00:00', 'dance', 10000002),
+(16, '2025-10-28 11:15:00', 'dance', 10000003),
+(17, '2025-09-22 09:30:00', 'investment', 10000004),
+(18, '2025-09-25 14:00:00', 'finance', 10000005),
+(19, '2025-10-08 10:45:00', 'mcat', 10000006),
+(20, '2025-10-09 12:20:00', 'medical', 10000007),
+(21, '2025-10-15 10:00:00', 'mental health', 10000008),
+(22, '2025-10-18 14:30:00', 'mental health', 10000009),
+(23, '2025-10-22 11:15:00', 'mental health', 10000010),
+(24, '2025-11-01 09:00:00', 'mental health', 10000011),
+(25, '2025-11-05 13:20:00', 'mental health', 10000012),
+(26, '2025-10-10 12:00:00', 'internship', 10000013),
+(27, '2025-10-12 15:30:00', 'internship', 10000014),
+(28, '2025-10-20 10:45:00', 'internship', 10000015),
+(29, '2025-11-03 14:00:00', 'internship', 10000001),
+(30, '2025-10-16 11:00:00', 'networking', 10000002),
+(31, '2025-10-19 13:30:00', 'networking', 10000003),
+(32, '2025-11-07 10:15:00', 'networking', 10000004),
+(33, '2025-10-14 09:00:00', 'yoga', 10000005),
+(34, '2025-10-17 15:00:00', 'yoga', 10000006),
+(35, '2025-10-21 12:30:00', 'meditation', 10000007),
+(36, '2025-10-11 10:00:00', 'volunteer', 10000008),
+(37, '2025-10-13 14:00:00', 'volunteer', 10000009),
+(38, '2025-10-24 11:30:00', 'volunteer', 10000010),
+(39, '2025-10-09 10:30:00', 'debate', 10000011),
+(40, '2025-10-11 15:00:00', 'debate', 10000012),
+(41, '2025-09-30 11:00:00', 'photography', 10000013),
+(42, '2025-10-03 14:30:00', 'photography', 10000014),
+(43, '2025-11-05 14:00:00', 'basketball', 10000015),
+(44, '2025-11-08 16:20:00', 'basketball', 10000001),
+(45, '2025-10-14 15:30:00', 'tutoring', 10000002),
+(46, '2025-10-17 13:00:00', 'study group', 10000003),
+(47, '2025-11-02 13:30:00', 'cultural', 10000004),
+(48, '2025-11-04 10:00:00', 'food', 10000005),
+(49, '2025-10-30 11:00:00', 'career', 10000006),
+(50, '2025-11-06 15:00:00', 'robotics', 10000007);
+
+-- Insert Search Results (events that appeared in searches)
+INSERT INTO Search_Result (resultID, clicks, appearances, eventID) VALUES
+(1, 5, 10, 70000001),  -- Web Dev Workshop
+(2, 3, 5, 70000011),   -- Hackathon
+(3, 2, 4, 70000006),   -- Soccer
+(4, 3, 6, 70000002),   -- Dance
+(5, 2, 3, 70000003),   -- Investment
+(6, 1, 2, 70000012),   -- Investment Panel
+(7, 2, 4, 70000008),   -- MCAT Prep
+(8, 1, 2, 70000007),   -- Photography
+(9, 1, 3, 70000004),   -- Beach Cleanup (volunteer)
+(10, 1, 2, 70000005),  -- Debate
+(11, 1, 2, 70000010),  -- Robotics
+(12, 1, 2, 70000009);  -- Food Festival
+
+-- Insert Searches_Search_Results (which searches returned which results)
+INSERT INTO Searches_Search_Results (searchID, resultID) VALUES
+-- Web development searches
+(1, 1), (1, 2),
+(2, 1), (2, 2),
+(3, 1), (3, 2),
+(4, 1), (4, 2),
+(5, 1), (5, 2),
+
+-- Coding/programming
+(6, 1), (6, 2),
+(7, 1), (7, 2),
+(8, 1), (8, 2),
+
+-- Hackathon
+(9, 2),
+(10, 2),
+
+-- Soccer/sports
+(11, 3),
+(12, 3),
+(13, 3),
+
+-- Dance
+(14, 4),
+(15, 4),
+(16, 4),
+
+-- Investment/finance
+(17, 5), (17, 6),
+(18, 5), (18, 6),
+
+-- MCAT/medical
+(19, 7),
+(20, 7),
+
+-- Photography
+(41, 8),
+(42, 8),
+
+-- Volunteer
+(36, 9),
+(37, 9),
+(38, 9),
+
+-- Debate
+(39, 10),
+(40, 10),
+
+-- Robotics
+(50, 11),
+
+-- Food/cultural
+(47, 12),
+(48, 12);
