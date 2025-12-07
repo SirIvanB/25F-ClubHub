@@ -22,9 +22,12 @@ def get_all_events():
             e.startDateTime,
             e.endDateTime,
             e.location,
+            e.buildingName,
+            e.roomNumber,
             e.capacity,
             c.name AS club_name,
-            c.clubID
+            c.clubID,
+            c.type AS club_type
         FROM Events e
         JOIN Clubs c ON e.clubID = c.clubID
         WHERE e.startDateTime >= CURRENT_TIMESTAMP

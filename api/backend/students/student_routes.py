@@ -62,9 +62,9 @@ def create_rsvp(student_id):
         cursor = db.cursor(dictionary=True)
         query = """
             INSERT INTO RSVPs 
-                (rsvp_id, event_id, student_id, status, created_datetime)
+                (studentID, eventID, status, timestamp)
             VALUES 
-                (UUID(), %s, %s, 'confirmed', CURRENT_TIMESTAMP)
+                (%s, %s, 'confirmed', CURRENT_TIMESTAMP)
         """
         cursor.execute(query, (data['event_id'], student_id))
         db.commit()
