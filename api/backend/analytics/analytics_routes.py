@@ -3,47 +3,192 @@ from backend.db_connection import db
 from mysql.connector import Error
 from flask import current_app
 from pymysql.cursors import DictCursor
+from datetime import datetime, timedelta
 
 analytics_routes = Blueprint("analytics_routes", __name__)
 
-
-# GET /analytics/engagement
-@analytics_routes.route("/analytics/engagement", methods=["GET"])
-def get_engagement_metrics():
-    """
-    Return the daily engagement metrics.
-
-    Uses audit_logs table with columns like:
-      - activity_date (DATE or DATETIME)
-      - user_id
-      - action_type  ('event_view', 'rsvp_created', 'search', 'check_in', etc.)
-      - entity_id
-      - log_id
-    """
+# GET /analytics/engagement/current-metrics
+@analytics_routes.route("/analytics/engagement/current-metrics", methods=["GET"])
+def get_current_period_metrics():
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
+        
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        
         query = """
             SELECT
-    DATE(timestamp) AS date,
-    COUNT(DISTINCT studentID) AS daily_active_users,
-    COUNT(DISTINCT attendanceID) AS total_attendances
-FROM Students_Event_Attendees
-WHERE timestamp >= CURDATE() - INTERVAL 30 DAY
-GROUP BY DATE(timestamp)
-ORDER BY date DESC;
+                COUNT(DISTINCT e.eventID) AS total_events,
+                (
+                    SELECT COUNT(DISTINCT invitation_id)
+                    FROM event_invitations
+                    WHERE invitation_status = 'accepted'
+                      AND sent_datetime >= %s
+                ) AS total_rsvps,
+                COUNT(DISTINCT sea.attendanceID) AS total_checkins,
+                COUNT(DISTINCT sea.studentID) AS active_users
+            FROM Events e
+            LEFT JOIN Students_Event_Attendees sea 
+                ON e.eventID = sea.eventID 
+                AND sea.timestamp >= %s
+            WHERE e.startDateTime >= %s
         """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        return jsonify(rows), 200
+        
+        cursor.execute(query, (start_date, start_date, start_date))
+        result = cursor.fetchone()
+        return jsonify(result), 200
     except Error as e:
-        current_app.logger.error(f"Error fetching engagement metrics: {e}")
-        return jsonify({"error": "Error fetching engagement metrics"}), 500
+        current_app.logger.error(f"Error fetching current metrics: {e}")
+        return jsonify({"error": "Error fetching current metrics"}), 500
     finally:
         if cursor:
             cursor.close()
 
+# GET /analytics/engagement/previous-metrics
+@analytics_routes.route("/analytics/engagement/previous-metrics", methods=["GET"])
+def get_previous_period_metrics():
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        # 30-60 days ago
+        end_date = datetime.now() - timedelta(days=30)
+        start_date = datetime.now() - timedelta(days=60)
+        
+        query = """
+            SELECT
+                COUNT(DISTINCT e.eventID) AS total_events,
+                (
+                    SELECT COUNT(DISTINCT invitation_id)
+                    FROM event_invitations
+                    WHERE invitation_status = 'accepted'
+                      AND sent_datetime >= %s
+                      AND sent_datetime < %s
+                ) AS total_rsvps,
+                COUNT(DISTINCT sea.attendanceID) AS total_checkins,
+                COUNT(DISTINCT sea.studentID) AS active_users
+            FROM Events e
+            LEFT JOIN Students_Event_Attendees sea 
+                ON e.eventID = sea.eventID 
+                AND sea.timestamp >= %s
+                AND sea.timestamp < %s
+            WHERE e.startDateTime >= %s
+              AND e.startDateTime < %s
+        """
+        
+        cursor.execute(query, (start_date, end_date, start_date, end_date, start_date, end_date))
+        result = cursor.fetchone()
+        return jsonify(result), 200
+    except Error as e:
+        current_app.logger.error(f"Error fetching previous metrics: {e}")
+        return jsonify({"error": "Error fetching previous metrics"}), 500
+    finally:
+        if cursor:
+            cursor.close()
 
+# GET /analytics/engagement/events-by-month
+@analytics_routes.route("/analytics/engagement/events-by-month", methods=["GET"])
+def get_events_by_month():
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        # Last 6 months
+        start_date = datetime.now() - timedelta(days=180)
+        start_date_str = start_date.strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT
+                DATE_FORMAT(startDateTime, '%%Y-%%m') AS month,
+                DATE_FORMAT(startDateTime, '%%M %%Y') AS month_name,
+                COUNT(DISTINCT eventID) AS event_count
+            FROM Events
+            WHERE DATE(startDateTime) >= %s
+            GROUP BY 
+                DATE_FORMAT(startDateTime, '%%Y-%%m'),
+                DATE_FORMAT(startDateTime, '%%M %%Y')
+            ORDER BY month ASC;
+        """
+        
+        cursor.execute(query, (start_date_str,))
+        rows = cursor.fetchall()
+        return jsonify(rows), 200
+    except Error as e:
+        current_app.logger.error(f"Error fetching events by month: {e}")
+        return jsonify({"error": "Error fetching events by month"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+# GET /analytics/engagement/top-clubs
+@analytics_routes.route("/analytics/engagement/top-clubs", methods=["GET"])
+def get_top_clubs_by_engagement():
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = datetime.now() - timedelta(days=30)
+        
+        query = """
+            SELECT
+                c.clubID,
+                c.name AS club_name,
+                COUNT(DISTINCT sea.attendanceID) AS total_checkins,
+                COUNT(DISTINCT e.eventID) AS events_hosted,
+                COUNT(DISTINCT sea.studentID) AS unique_attendees
+            FROM Clubs c
+            JOIN Events e ON c.clubID = e.clubID
+            LEFT JOIN Students_Event_Attendees sea 
+                ON e.eventID = sea.eventID
+                AND sea.timestamp >= %s
+            WHERE e.startDateTime >= %s
+            GROUP BY c.clubID, c.name
+            HAVING events_hosted > 0
+            ORDER BY total_checkins DESC
+            LIMIT 10
+        """
+        
+        cursor.execute(query, (start_date, start_date))
+        rows = cursor.fetchall()
+        return jsonify(rows), 200
+    except Error as e:
+        current_app.logger.error(f"Error fetching top clubs: {e}")
+        return jsonify({"error": "Error fetching top clubs"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+# GET /analytics/engagement/engagement-rate
+@analytics_routes.route("/analytics/engagement/engagement-rate", methods=["GET"])
+def get_engagement_rate():
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = datetime.now() - timedelta(days=30)
+        
+        query = """
+            SELECT
+                COUNT(DISTINCT sea.studentID) AS active_students,
+                (SELECT COUNT(*) FROM Students) AS total_students,
+                ROUND(
+                    (COUNT(DISTINCT sea.studentID) / (SELECT COUNT(*) FROM Students)) * 100,
+                    2
+                ) AS engagement_rate
+            FROM Students_Event_Attendees sea
+            WHERE sea.timestamp >= %s
+        """
+        
+        cursor.execute(query, (start_date,))
+        result = cursor.fetchone()
+        return jsonify(result), 200
+    except Error as e:
+        current_app.logger.error(f"Error calculating engagement rate: {e}")
+        return jsonify({"error": "Error calculating engagement rate"}), 500
+    finally:
+        if cursor:
+            cursor.close()
 
 # GET /analytics/search-queries
 @analytics_routes.route("/analytics/search-queries", methods=["GET"])

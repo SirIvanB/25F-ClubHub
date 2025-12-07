@@ -111,7 +111,6 @@ def SideBarLinks(show_home=False):
             KeywordManagerNav()
             ClubAnalyticsNav()
             WeeklyReportNav()
-            ApiTestNav()
 
             
 
