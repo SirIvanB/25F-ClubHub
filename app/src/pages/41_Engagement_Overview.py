@@ -21,7 +21,7 @@ st.markdown("Comprehensive view of platform engagement metrics")
 st.divider()
 
 #API endpoint
-API_URL = "http://web-api:4000/analytics/analytics/engagement"
+API_URL = "http://web-api:4000/analytics/engagement"
 
 events, rsvps, checkins, active_users = 0, 0, 0, 0
 past_events, past_rsvps, past_checkins, past_active_users = 0, 0, 0, 0

@@ -2,10 +2,10 @@ from flask import Blueprint, jsonify, request
 from backend.db_connection import db
 from mysql.connector import Error
 from flask import current_app
+from pymysql.cursors import DictCursor
 
 # Create a Blueprint for Events routes
 events = Blueprint("events", __name__)
-
 
 # GET /events - Return all upcoming events [Ruth-1]
 @events.route("/events", methods=["GET"])
@@ -225,7 +225,7 @@ def get_event_keywords(event_id):
             COUNT(sl.searchLogID) as search_count
         FROM Events_Event_Keywords eek
         JOIN Keywords k ON eek.keywordID = k.keywordID
-        LEFT JOIN Search_Logs sl ON sl.searchQuery LIKE CONCAT('%', k.keyword, '%')
+        LEFT JOIN Search_Logs sl ON sl.searchQuery LIKE CONCAT('%%', k.keyword, '%%')
         WHERE eek.eventID = %s
         GROUP BY k.keywordID, k.keyword
         ORDER BY search_count DESC
