@@ -6,8 +6,7 @@ import pandas as pd
 st.set_page_config(
     page_title="Club Rankings - ClubHub",
     page_icon="🏆",
-    layout="wide"
-)
+    layout="wide")
 
 # API Base URL
 API_BASE_URL = "http://web-api:4000"
