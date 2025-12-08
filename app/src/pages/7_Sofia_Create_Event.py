@@ -145,21 +145,22 @@ if submit_draft or submit_publish:
         
         # Create event data
         event_data = {
-            "club_id": CLUB_ID,
-            "event_name": event_name,
-            "event_description": event_description,
-            "event_type": event_type,
+            "eventID": 0,  # Will be assigned by backend
+            "clubID": CLUB_ID,
+            "name": event_name,
+            "description": event_description,
+            "eventType": event_type,
             "category": category,
-            "start_datetime": start_datetime.isoformat(),
-            "end_datetime": end_datetime.isoformat(),
+            "startDateTime": start_datetime.isoformat(),
+            "endDateTime": end_datetime.isoformat(),
             "location": location,
-            "building_name": building_name,
-            "room_number": room_number,
+            "buildingName": building_name,
+            "roomNumber": room_number,
             "capacity": capacity,
-            "created_by_user_id": USER_ID,
+            "createdByUserID": USER_ID,
             "tags": ",".join(tags),
-            "require_rsvp": require_rsvp,
-            "enable_checkin": enable_checkin,
+            "requireRSVP": require_rsvp,
+            "enableCheckin": enable_checkin,
             "status": "published" if submit_publish else "draft"
         }
         
