@@ -199,7 +199,6 @@ def get_engagement_rate():
 # GET /search/summary
 @analytics_routes.route("/search/summary", methods=["GET"])
 def get_search_summary():
-    """Get search summary metrics (last 90 days)"""
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
@@ -233,7 +232,6 @@ def get_search_summary():
 # GET /search/top-keywords
 @analytics_routes.route("/search/top-keywords", methods=["GET"])
 def get_top_keywords():
-    """Get most searched keywords with CTR data"""
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
@@ -272,7 +270,6 @@ def get_top_keywords():
 # GET /search/no-results
 @analytics_routes.route("/search/no-results", methods=["GET"])
 def get_no_result_searches():
-    """Get searches that returned no results"""
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
@@ -303,56 +300,9 @@ def get_no_result_searches():
         if cursor:
             cursor.close()
 
-# GET /analytics/demographics
-@analytics_routes.route("/demographics/overview", methods=["GET"])
-def get_demographic_overview():
-    """
-    Return engagement analysis by student demographics (year and major).
-    """
-    cursor = None
-    try:
-        cursor = db.get_db().cursor(DictCursor)
-        
-        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
-        
-        query = """
-            SELECT 
-                s.year as student_year,
-                s.major,
-                COUNT(DISTINCT s.studentID) as total_students,
-                COUNT(DISTINCT r.rsvpID) as total_rsvps,
-                COUNT(DISTINCT sea.attendanceID) as total_attendance,
-                COUNT(DISTINCT sea.eventID) as unique_events_attended,
-                ROUND(
-                    COUNT(DISTINCT sea.studentID) * 100.0 / COUNT(DISTINCT s.studentID),
-                    1
-                ) as engagement_rate
-            FROM Students s
-            LEFT JOIN RSVPs r 
-                ON s.studentID = r.studentID
-                AND r.timestamp >= %s
-            LEFT JOIN Students_Event_Attendees sea 
-                ON s.studentID = sea.studentID
-                AND sea.timestamp >= %s
-            GROUP BY s.year, s.major
-            ORDER BY engagement_rate DESC
-        """
-        
-        cursor.execute(query, (start_date, start_date))
-        rows = cursor.fetchall()
-        return jsonify(rows), 200
-        
-    except Exception as e:
-        current_app.logger.error(f"Error fetching demographic overview: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if cursor:
-            cursor.close()
-
 # GET /demographics/by-year
 @analytics_routes.route("/demographics/by-year", methods=["GET"])
 def get_engagement_by_year():
-    """Engagement breakdown by student year"""
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
@@ -392,7 +342,6 @@ def get_engagement_by_year():
 # GET /demographics/by-major
 @analytics_routes.route("/demographics/by-major", methods=["GET"])
 def get_engagement_by_major():
-    """Engagement breakdown by major"""
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
@@ -439,7 +388,6 @@ def get_engagement_by_major():
 # GET /demographics/event-preferences
 @analytics_routes.route("/demographics/event-preferences", methods=["GET"])
 def get_event_preferences_by_demographic():
-    """Show which demographics attend which event categories"""
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
