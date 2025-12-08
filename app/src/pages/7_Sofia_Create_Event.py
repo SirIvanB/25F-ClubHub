@@ -171,7 +171,7 @@ if submit_draft or submit_publish:
                 timeout=5
             )
             
-            if response.status_code == 200:
+            if response.status_code == 201:
                 if submit_publish:
                     st.success("🎉 Event published successfully!")
                     st.balloons()
