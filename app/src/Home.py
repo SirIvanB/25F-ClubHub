@@ -103,12 +103,12 @@ with col3:
     - Manage alerts
     - Check metrics
     """)
-    if st.button("Enter as David", use_container_width=True, disabled=True):
+    if st.button("Enter as David", use_container_width=True):
         st.session_state['authenticated'] = True
         st.session_state['role'] = 'administrator'
         st.session_state['first_name'] = 'David'
         logger.info("Logging in as System Administrator Persona")
-        st.info("Coming soon!")
+        st.switch_page("pages/20_Admin_Home.py")
 
 with col4:
     st.markdown("### 📊 Data Analyst")
