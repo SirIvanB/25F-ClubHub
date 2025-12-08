@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import altair as alt
 
 # Page config
 st.set_page_config(
@@ -116,15 +117,37 @@ else:
                 
                 col1, col2 = st.columns(2)
                 
+                #with col1:
+                #    st.markdown("**Budget Comparison**")
+                #    budget_chart = comparison_df[['Club Name', 'Budget ($)']].sort_values('Budget ($)', ascending=False).set_index('Club Name')
+                #    st.bar_chart(budget_chart, height=500, use_container_width=True)
                 with col1:
                     st.markdown("**Budget Comparison**")
-                    budget_chart = comparison_df[['Club Name', 'Budget ($)']].sort_values('Budget ($)', ascending=False).set_index('Club Name')
-                    st.bar_chart(budget_chart, height=500, use_container_width=True)
+                    budget_df = comparison_df[['Club Name', 'Budget ($)']].sort_values('Budget ($)', ascending=False)
+    
+                    budget_chart = alt.Chart(budget_df).mark_bar().encode(
+                        x=alt.X('Club Name:N', sort='-y', title='Club'),
+                        y=alt.Y('Budget ($):Q', title='Budget ($)'),
+                        tooltip=['Club Name', 'Budget ($)']
+                    ).properties(height=400)
+    
+                    st.altair_chart(budget_chart, use_container_width=True)
                 
+                #with col2:
+                #    st.markdown("**Member Count Comparison**")
+                #    members_chart = comparison_df[['Club Name', 'Members']].sort_values('Members', ascending=False).set_index('Club Name')
+                #    st.bar_chart(members_chart, height=500, use_container_width=True)
                 with col2:
                     st.markdown("**Member Count Comparison**")
-                    members_chart = comparison_df[['Club Name', 'Members']].set_index('Club Name')
-                    st.bar_chart(members_chart)
+                    members_df = comparison_df[['Club Name', 'Members']].sort_values('Members', ascending=False)
+    
+                    members_chart = alt.Chart(members_df).mark_bar().encode(
+                        x=alt.X('Club Name:N', sort='-y', title='Club'),
+                        y=alt.Y('Members:Q', title='Members'),
+                        tooltip=['Club Name', 'Members']
+                    ).properties(height=400)
+    
+                    st.altair_chart(members_chart, use_container_width=True)
                 
                 # Highlight best/worst
                 st.divider()
