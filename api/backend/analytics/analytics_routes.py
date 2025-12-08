@@ -7,58 +7,9 @@ from datetime import datetime, timedelta
 
 analytics_routes = Blueprint("analytics_routes", __name__)
 
-@analytics_routes.route("/analytics/debug/tables", methods=["GET"])
-def debug_tables():
-    cursor = None
-    try:
-        cursor = db.get_db().cursor(DictCursor)
-        
-        # Check if tables exist
-        cursor.execute("SHOW TABLES")
-        tables = cursor.fetchall()
-        
-        # Check counts for key tables
-        counts = {}
-        
-        cursor.execute("SELECT COUNT(*) as count FROM Events")
-        counts['Events'] = cursor.fetchone()['count']
-        
-        cursor.execute("SELECT COUNT(*) as count FROM Searches")
-        counts['Searches'] = cursor.fetchone()['count']
-        
-        cursor.execute("SELECT COUNT(*) as count FROM Search_Result")
-        counts['Search_Result'] = cursor.fetchone()['count']
-        
-        cursor.execute("SELECT COUNT(*) as count FROM Students")
-        counts['Students'] = cursor.fetchone()['count']
-        
-        return jsonify({
-            "tables": tables,
-            "counts": counts
-        }), 200
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if cursor:
-            cursor.close()
-
-@analytics_routes.route("/analytics/list-routes", methods=["GET"])
-def list_routes():
-    """List all registered routes"""
-    from flask import current_app
-    routes = []
-    for rule in current_app.url_map.iter_rules():
-        routes.append({
-            "endpoint": rule.endpoint,
-            "methods": list(rule.methods),
-            "path": str(rule)
-        })
-    return jsonify(routes), 200
-
 
 # GET /analytics/engagement/current-metrics
-@analytics_routes.route("/analytics/engagement/current-metrics", methods=["GET"])
+@analytics_routes.route("/engagement/current-metrics", methods=["GET"])
 def get_current_period_metrics():
     cursor = None
     try:
@@ -72,10 +23,10 @@ def get_current_period_metrics():
             SELECT
                 COUNT(DISTINCT e.eventID) AS total_events,
                 (
-                    SELECT COUNT(DISTINCT invitation_id)
-                    FROM event_invitations
-                    WHERE invitation_status = 'accepted'
-                      AND sent_datetime >= %s
+                    SELECT COUNT(DISTINCT invitationID)
+                    FROM Event_Invitations
+                    WHERE status = 'accepted'
+                      AND sentAt >= %s
                 ) AS total_rsvps,
                 COUNT(DISTINCT sea.attendanceID) AS total_checkins,
                 COUNT(DISTINCT sea.studentID) AS active_users
@@ -98,7 +49,7 @@ def get_current_period_metrics():
 
 
 # GET /analytics/engagement/previous-metrics
-@analytics_routes.route("/analytics/engagement/previous-metrics", methods=["GET"])
+@analytics_routes.route("/engagement/previous-metrics", methods=["GET"])
 def get_previous_period_metrics():
     cursor = None
     try:
@@ -115,11 +66,11 @@ def get_previous_period_metrics():
             SELECT
                 COUNT(DISTINCT e.eventID) AS total_events,
                 (
-                    SELECT COUNT(DISTINCT invitation_id)
-                    FROM event_invitations
-                    WHERE invitation_status = 'accepted'
-                      AND sent_datetime >= %s
-                      AND sent_datetime < %s
+                    SELECT COUNT(DISTINCT invitationID)
+                    FROM Event_Invitations
+                    WHERE status = 'accepted'
+                      AND sentAt >= %s
+                      AND sentAt < %s
                 ) AS total_rsvps,
                 COUNT(DISTINCT sea.attendanceID) AS total_checkins,
                 COUNT(DISTINCT sea.studentID) AS active_users
@@ -143,7 +94,7 @@ def get_previous_period_metrics():
             cursor.close()
 
 # GET /analytics/engagement/events-by-month
-@analytics_routes.route("/analytics/engagement/events-by-month", methods=["GET"])
+@analytics_routes.route("/engagement/events-by-month", methods=["GET"])
 def get_events_by_month():
     cursor = None
     try:
@@ -177,7 +128,7 @@ def get_events_by_month():
             cursor.close()
 
 # GET /analytics/engagement/top-clubs
-@analytics_routes.route("/analytics/engagement/top-clubs", methods=["GET"])
+@analytics_routes.route("/engagement/top-clubs", methods=["GET"])
 def get_top_clubs_by_engagement():
     cursor = None
     try:
@@ -214,8 +165,8 @@ def get_top_clubs_by_engagement():
         if cursor:
             cursor.close()
 
-# GET /analytics/engagement/engagement-rate
-@analytics_routes.route("/analytics/engagement/engagement-rate", methods=["GET"])
+# GET /engagement/engagement-rate
+@analytics_routes.route("/engagement/engagement-rate", methods=["GET"])
 def get_engagement_rate():
     cursor = None
     try:
@@ -245,8 +196,8 @@ def get_engagement_rate():
         if cursor:
             cursor.close()
 
-# GET /analytics/search/summary
-@analytics_routes.route("/analytics/search/summary", methods=["GET"])
+# GET /search/summary
+@analytics_routes.route("/search/summary", methods=["GET"])
 def get_search_summary():
     """Get search summary metrics (last 90 days)"""
     cursor = None
@@ -279,8 +230,8 @@ def get_search_summary():
         if cursor:
             cursor.close()
 
-# GET /analytics/search/top-keywords
-@analytics_routes.route("/analytics/search/top-keywords", methods=["GET"])
+# GET /search/top-keywords
+@analytics_routes.route("/search/top-keywords", methods=["GET"])
 def get_top_keywords():
     """Get most searched keywords with CTR data"""
     cursor = None
@@ -318,8 +269,8 @@ def get_top_keywords():
         if cursor:
             cursor.close()
 
-# GET /analytics/search/no-results
-@analytics_routes.route("/analytics/search/no-results", methods=["GET"])
+# GET /search/no-results
+@analytics_routes.route("/search/no-results", methods=["GET"])
 def get_no_result_searches():
     """Get searches that returned no results"""
     cursor = None
@@ -353,60 +304,232 @@ def get_no_result_searches():
             cursor.close()
 
 # GET /analytics/demographics
-@analytics_routes.route("/analytics/demographics", methods=["GET"])
-def get_demographic_engagement():
+@analytics_routes.route("/demographics/overview", methods=["GET"])
+def get_demographic_overview():
     """
-    Return engagement analysis by student demographics.
-
-    Conceptually matches Part 3 SQL:
-
-    FROM Students s
-      LEFT JOIN RSVPs r ON s.student_id = r.student_id
-      LEFT JOIN Attendance a ON s.student_id = a.student_id
-           AND r.event_id = a.event_id
-
-    with fields like s.student_year, s.major, r.created_datetime, etc.
+    Return engagement analysis by student demographics (year and major).
     """
     cursor = None
     try:
         cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+        
         query = """
             SELECT 
-                s.student_year,
+                s.year as student_year,
                 s.major,
-                COUNT(DISTINCT r.student_id) AS students_with_rsvps,
-                COUNT(DISTINCT r.event_id) AS unique_events_rsvped,
-                COUNT(r.rsvp_id) AS total_rsvps,
-                COUNT(DISTINCT a.event_id) AS events_attended,
+                COUNT(DISTINCT s.studentID) as total_students,
+                COUNT(DISTINCT r.rsvpID) as total_rsvps,
+                COUNT(DISTINCT sea.attendanceID) as total_attendance,
+                COUNT(DISTINCT sea.eventID) as unique_events_attended,
                 ROUND(
-                    COUNT(DISTINCT a.event_id) * 100.0 /
-                    NULLIF(COUNT(DISTINCT r.event_id), 0),
-                    2
-                ) AS attendance_rate
+                    COUNT(DISTINCT sea.studentID) * 100.0 / COUNT(DISTINCT s.studentID),
+                    1
+                ) as engagement_rate
             FROM Students s
             LEFT JOIN RSVPs r 
-                ON s.student_id = r.student_id
-            LEFT JOIN Attendance a 
-                ON s.student_id = a.student_id
-               AND r.event_id = a.event_id
-            WHERE r.created_datetime >= NOW() - INTERVAL 90 DAY
-            GROUP BY s.student_year, s.major
-            ORDER BY total_rsvps DESC;
+                ON s.studentID = r.studentID
+                AND r.timestamp >= %s
+            LEFT JOIN Students_Event_Attendees sea 
+                ON s.studentID = sea.studentID
+                AND sea.timestamp >= %s
+            GROUP BY s.year, s.major
+            ORDER BY engagement_rate DESC
         """
-        cursor.execute(query)
+        
+        cursor.execute(query, (start_date, start_date))
         rows = cursor.fetchall()
         return jsonify(rows), 200
-    except Error as e:
-        current_app.logger.error(f"Error fetching demographic engagement: {e}")
-        return jsonify({"error": "Error fetching demographic engagement"}), 500
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching demographic overview: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+# GET /demographics/by-year
+@analytics_routes.route("/demographics/by-year", methods=["GET"])
+def get_engagement_by_year():
+    """Engagement breakdown by student year"""
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT 
+                s.year,
+                COUNT(DISTINCT s.studentID) as total_students,
+                COUNT(DISTINCT sea.studentID) as active_students,
+                COUNT(DISTINCT sea.attendanceID) as total_attendance,
+                ROUND(
+                    COUNT(DISTINCT sea.studentID) * 100.0 / COUNT(DISTINCT s.studentID),
+                    1
+                ) as participation_rate
+            FROM Students s
+            LEFT JOIN Students_Event_Attendees sea 
+                ON s.studentID = sea.studentID
+                AND sea.timestamp >= %s
+            GROUP BY s.year
+            ORDER BY s.year
+        """
+        
+        cursor.execute(query, (start_date,))
+        rows = cursor.fetchall()
+        return jsonify(rows), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching engagement by year: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+
+# GET /demographics/by-major
+@analytics_routes.route("/demographics/by-major", methods=["GET"])
+def get_engagement_by_major():
+    """Engagement breakdown by major"""
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT 
+                s.major,
+                COUNT(DISTINCT s.studentID) as total_students,
+                COUNT(DISTINCT sea.studentID) as active_students,
+                COUNT(DISTINCT sea.attendanceID) as total_attendance,
+                ROUND(AVG(attendance_per_student.attendance_count), 1) as avg_attendance_per_student,
+                ROUND(
+                    COUNT(DISTINCT sea.studentID) * 100.0 / COUNT(DISTINCT s.studentID),
+                    1
+                ) as participation_rate
+            FROM Students s
+            LEFT JOIN Students_Event_Attendees sea 
+                ON s.studentID = sea.studentID
+                AND sea.timestamp >= %s
+            LEFT JOIN (
+                SELECT studentID, COUNT(*) as attendance_count
+                FROM Students_Event_Attendees
+                WHERE timestamp >= %s
+                GROUP BY studentID
+            ) as attendance_per_student ON s.studentID = attendance_per_student.studentID
+            GROUP BY s.major
+            ORDER BY participation_rate DESC
+        """
+        
+        cursor.execute(query, (start_date, start_date))
+        rows = cursor.fetchall()
+        return jsonify(rows), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching engagement by major: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+
+# GET /demographics/event-preferences
+@analytics_routes.route("/demographics/event-preferences", methods=["GET"])
+def get_event_preferences_by_demographic():
+    """Show which demographics attend which event categories"""
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT 
+                s.major,
+                s.year,
+                cat.name as category_name,
+                COUNT(DISTINCT sea.attendanceID) as attendance_count,
+                COUNT(DISTINCT sea.studentID) as unique_students
+            FROM Students s
+            JOIN Students_Event_Attendees sea ON s.studentID = sea.studentID
+            JOIN Events e ON sea.eventID = e.eventID
+            JOIN Clubs c ON e.clubID = c.clubID
+            JOIN Categories cat ON c.categoryID = cat.categoryID
+            WHERE sea.timestamp >= %s
+            GROUP BY s.major, s.year, cat.name
+            ORDER BY s.major, attendance_count DESC
+        """
+        
+        cursor.execute(query, (start_date,))
+        rows = cursor.fetchall()
+        return jsonify(rows), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching event preferences: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+
+# GET /demographics/underserved
+@analytics_routes.route("/demographics/underserved", methods=["GET"])
+def get_underserved_populations():
+    """Identify demographics with low engagement"""
+    cursor = None
+    try:
+        cursor = db.get_db().cursor(DictCursor)
+        
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT 
+                s.major,
+                s.year,
+                COUNT(DISTINCT s.studentID) as total_students,
+                COUNT(DISTINCT sea.studentID) as active_students,
+                ROUND(
+                    COUNT(DISTINCT sea.studentID) * 100.0 / COUNT(DISTINCT s.studentID),
+                    1
+                ) as participation_rate,
+                (SELECT AVG(participation_rate)
+                 FROM (
+                     SELECT 
+                         COUNT(DISTINCT sea2.studentID) * 100.0 / COUNT(DISTINCT s2.studentID) as participation_rate
+                     FROM Students s2
+                     LEFT JOIN Students_Event_Attendees sea2 
+                         ON s2.studentID = sea2.studentID
+                         AND sea2.timestamp >= %s
+                     GROUP BY s2.major, s2.year
+                 ) as avg_calc
+                ) as overall_avg_rate
+            FROM Students s
+            LEFT JOIN Students_Event_Attendees sea 
+                ON s.studentID = sea.studentID
+                AND sea.timestamp >= %s
+            GROUP BY s.major, s.year
+            HAVING participation_rate < overall_avg_rate
+            ORDER BY participation_rate ASC
+        """
+        
+        cursor.execute(query, (start_date, start_date))
+        rows = cursor.fetchall()
+        return jsonify(rows), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching underserved populations: {e}")
+        return jsonify({"error": str(e)}), 500
     finally:
         if cursor:
             cursor.close()
 
 
 
-# GET /analytics/reports
-@analytics_routes.route("/analytics/reports", methods=["GET"])
+# GET /reports
+@analytics_routes.route("/reports", methods=["GET"])
 def get_engagement_reports():
     """
     Return generated engagement reports.
@@ -427,17 +550,17 @@ def get_engagement_reports():
         cursor = db.get_db().cursor(DictCursor)
         query = """
             SELECT 
-                report_id,
-                report_period_start,
-                report_period_end,
-                total_active_users,
-                total_events_created,
-                total_rsvps,
-                total_attendance,
-                total_searches,
-                generated_datetime
+                reportID,
+                reportPeriodStart,
+                reportPeriodEnd,
+                totalActiveUsers,
+                totalEventsCreated,
+                totalRSVPs,
+                totalAttendance,
+                totalSearches,
+                generatedAt
             FROM Engagement_Reports
-            ORDER BY generated_datetime DESC
+            ORDER BY generatedAt DESC
             LIMIT 50;
         """
         cursor.execute(query)
@@ -452,13 +575,11 @@ def get_engagement_reports():
 
 
 
-# POST /analytics/reports
-@analytics_routes.route("/analytics/reports", methods=["POST"])
+# POST /reports
+@analytics_routes.route("/reports", methods=["POST"])
 def generate_weekly_engagement_report():
     """
     Generate and save a weekly engagement report.
-
-    This is a MySQL-ish adaptation of your Part 3 query.
 
     It summarizes the last 7 days of activity in audit_logs
     into a single row in engagement_reports.
@@ -467,46 +588,63 @@ def generate_weekly_engagement_report():
     try:
         cursor = db.get_db().cursor(DictCursor)
 
+        # Calculate dates in Python
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=7)
+        
+        end_date_str = end_date.strftime('%Y-%m-%d')
+        start_date_str = start_date.strftime('%Y-%m-%d')
+
         insert_query = """
             INSERT INTO Engagement_Reports 
-                (report_period_start,
-                 report_period_end,
-                 total_active_users,
-                 total_events_created,
-                 total_rsvps,
-                 total_attendance,
-                 total_searches,
-                 generated_datetime)
-            SELECT
-                DATE_SUB(CURDATE(), INTERVAL 7 DAY) AS report_period_start,
-                CURDATE() AS report_period_end,
-                COUNT(DISTINCT CASE 
-                    WHEN al.action_type IN ('login', 'event_view', 'search')
-                    THEN al.user_id
-                END) AS total_active_users,
-                COUNT(DISTINCT CASE 
-                    WHEN al.action_type = 'event_created'
-                    THEN al.entity_id
-                END) AS total_events_created,
-                COUNT(DISTINCT CASE 
-                    WHEN al.action_type = 'rsvp_created'
-                    THEN al.log_id
-                END) AS total_rsvps,
-                COUNT(DISTINCT CASE 
-                    WHEN al.action_type = 'check_in'
-                    THEN al.log_id
-                END) AS total_attendance,
-                COUNT(DISTINCT CASE 
-                    WHEN al.action_type = 'search'
-                    THEN al.log_id
-                END) AS total_searches,
-                NOW() AS generated_datetime
-            FROM Audit_Logs al
-            WHERE al.timestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-              AND al.timestamp < CURDATE() + INTERVAL 1 DAY;
+                (reportPeriodStart,
+                 reportPeriodEnd,
+                 totalActiveUsers,
+                 totalEventsCreated,
+                 totalRSVPs,
+                 totalAttendance,
+                 totalSearches,
+                 generatedAt)
+            VALUES (
+                %s,
+                %s,
+                (SELECT COUNT(DISTINCT userID) 
+                 FROM Audit_Logs 
+                 WHERE actionType IN ('login', 'event_view', 'search')
+                   AND timestamp >= %s
+                   AND timestamp < %s),
+                (SELECT COUNT(DISTINCT entityID) 
+                 FROM Audit_Logs 
+                 WHERE actionType = 'event_created'
+                   AND timestamp >= %s
+                   AND timestamp < %s),
+                (SELECT COUNT(DISTINCT logID) 
+                 FROM Audit_Logs 
+                 WHERE actionType = 'rsvp_created'
+                   AND timestamp >= %s
+                   AND timestamp < %s),
+                (SELECT COUNT(DISTINCT logID) 
+                 FROM Audit_Logs 
+                 WHERE actionType = 'check_in'
+                   AND timestamp >= %s
+                   AND timestamp < %s),
+                (SELECT COUNT(DISTINCT logID) 
+                 FROM Audit_Logs 
+                 WHERE actionType = 'search'
+                   AND timestamp >= %s
+                   AND timestamp < %s),
+                NOW()
+            )
         """
 
-        cursor.execute(insert_query)
+        cursor.execute(insert_query, (
+            start_date_str, end_date_str,  # reportPeriodStart, reportPeriodEnd
+            start_date_str, end_date_str,  # totalActiveUsers
+            start_date_str, end_date_str,  # totalEventsCreated
+            start_date_str, end_date_str,  # totalRSVPs
+            start_date_str, end_date_str,  # totalAttendance
+            start_date_str, end_date_str   # totalSearches
+        ))
         db.commit()
 
         return jsonify({"message": "Weekly engagement report generated"}), 201

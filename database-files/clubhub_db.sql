@@ -496,8 +496,8 @@ INSERT INTO Events (eventID, name, description, searchDescription, startDateTime
 (70000008, 'MCAT Prep Session', 'Study strategies and practice questions', 'mcat medicine premed medical school test preparation', '2025-10-13 16:00:00', '2025-10-13 18:00:00', 10000008, 50000008, 40, 'Churchill Hall 105', 'Churchill Hall', '105'),
 (70000009, 'Cultural Food Festival', 'Celebrate diversity through international cuisine', 'international culture food diversity festival multicultural', '2025-09-16 12:00:00', '2025-09-16 16:00:00', 10000009, 50000009, 150, 'Ell Hall Plaza', 'Ell Hall', 'Plaza'),
 (70000010, 'Robotics Competition Prep', 'Final preparation for regional competition', 'robotics engineering competition programming stem technology', '2025-09-07 10:00:00', '2025-09-07 14:00:00', 10000010, 50000010, 50, 'Forsyth Building Lab', 'Forsyth Building', '301'),
-(70000011, 'Hackathon 2024', '24-hour coding competition with prizes', 'hackathon coding programming competition innovation software', '2025-09-20 09:00:00', '2025-09-21 09:00:00', 10000001, 50000001, 100, 'West Village H Commons', 'West Village H', 'Commons'),
-(70000012, 'Investment Panel Discussion', 'Alumni share career insights in finance', 'finance career alumni networking investment banking', '2025-09-18 18:30:00', '2025-09-18 20:00:00', 10000003, 50000003, 75, 'Ryder Hall 155', 'Ryder Hall', '155');
+(70000011, 'Hackathon 2024', '24-hour coding competition with prizes', 'hackathon coding programming competition innovation software', '2025-12-20 09:00:00', '2025-12-21 09:00:00', 10000001, 50000001, 100, 'West Village H Commons', 'West Village H', 'Commons'),
+(70000012, 'Investment Panel Discussion', 'Alumni share career insights in finance', 'finance career alumni networking investment banking', '2025-12-18 18:30:00', '2025-12-18 20:00:00', 10000003, 50000003, 75, 'Ryder Hall 155', 'Ryder Hall', '155');
 -- Insert Servers
 INSERT INTO Servers (serverID, status, ipAddress, lastUpdated) VALUES
 (80000001, 'active', '192.168.1.10', '2024-12-06 08:00:00'),
@@ -825,5 +825,15 @@ INSERT INTO Searches_Search_Results (searchID, resultID) VALUES
 -- Food/cultural
 (47, 12),
 (48, 12);
+
+INSERT INTO Engagement_Reports (reportPeriodStart, reportPeriodEnd, totalActiveUsers, totalEventsCreated, totalRSVPs, totalAttendance, totalSearches, generatedAt) VALUES
+('2025-10-13', '2025-10-20', 180, 8, 250, 210, 85, '2025-10-20 23:59:59'),
+('2025-10-20', '2025-10-27', 195, 10, 280, 245, 92, '2025-10-27 23:59:59'),
+('2025-10-27', '2025-11-03', 210, 11, 310, 275, 98, '2025-11-03 23:59:59'),
+('2025-11-03', '2025-11-10', 225, 12, 340, 295, 105, '2025-11-10 23:59:59'),
+('2025-11-10', '2025-11-17', 240, 13, 370, 320, 112, '2025-11-17 23:59:59'),
+('2025-11-17', '2025-11-24', 255, 14, 400, 350, 118, '2025-11-24 23:59:59'),
+('2025-11-24', '2025-12-01', 270, 15, 430, 375, 123, '2025-12-01 23:59:59'),
+('2025-11-30', '2025-12-07', 285, 12, 450, 387, 127, '2025-12-07 23:59:59');
 
 COMMIT;

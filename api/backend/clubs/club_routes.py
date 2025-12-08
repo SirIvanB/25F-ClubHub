@@ -1,7 +1,9 @@
+import datetime
 from flask import Blueprint, jsonify, request
-from backend.db_connection import db
+from backend.db_connection import cursor, db
 from mysql.connector import Error
 from flask import current_app
+from datetime import datetime, timedelta
 
 club_routes = Blueprint('club_routes', __name__)
 
@@ -312,43 +314,43 @@ def get_similar_clubs(club_id):
         cursor.close()
 
 # [DataAnalyst-4.5] Get club performance metrics
-@club_routes.route('/clubs/performance', methods=['GET'])
+@club_routes.route('/performance', methods=['GET'])
 def get_club_performance():
     try:
         days = request.args.get('days', 90, type=int)
-        min_events = request.args.get('minEvents', 3, type=int)
+        start_date_str = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+        min_events = 1 
         
         cursor = db.cursor(dictionary=True)
         query = """
             SELECT 
-                c.club_id,
-                c.club_name,
-                COUNT(DISTINCT e.event_id) AS total_events,
-                COUNT(DISTINCT r.rsvp_id) AS total_rsvps,
-                COUNT(DISTINCT a.attendance_id) AS total_attendance,
+                c.clubID as club_id,
+                c.name as club_name,
+                COUNT(DISTINCT e.eventID) AS total_events,
+                COUNT(DISTINCT r.rsvpID) AS total_rsvps,
+                COUNT(DISTINCT sea.attendanceID) AS total_attendance,
                 ROUND(AVG(event_attendance.attendance_count), 2) AS avg_attendance_per_event,
                 ROUND(AVG(event_attendance.attendance_count) * 100.0 / 
-                      NULLIF(AVG(e.capacity), 0), 2) AS avg_capacity_utilization,
-                CASE 
-                    WHEN AVG(event_attendance.attendance_count) < 10 THEN 'Needs Support'
-                    WHEN AVG(event_attendance.attendance_count) >= 50 THEN 'High Performance'
-                    ELSE 'Moderate Performance'
-                END AS performance_category
+                    NULLIF(AVG(e.capacity), 0), 2) AS avg_capacity_utilization
             FROM Clubs c
-            JOIN Events e ON c.club_id = e.club_id
-            LEFT JOIN RSVPs r ON e.event_id = r.event_id
+            JOIN Events e ON c.clubID = e.clubID
+            LEFT JOIN RSVPs r ON e.eventID = r.eventID
+                AND r.timestamp >= %s
+            LEFT JOIN Students_Event_Attendees sea ON e.eventID = sea.eventID
+                AND sea.timestamp >= %s
             LEFT JOIN (
-                SELECT event_id, COUNT(*) AS attendance_count
-                FROM Attendance
-                GROUP BY event_id
-            ) event_attendance ON e.event_id = event_attendance.event_id
-            WHERE e.start_datetime >= CURRENT_TIMESTAMP - INTERVAL %s DAY
-                AND e.end_datetime < CURRENT_TIMESTAMP
-            GROUP BY c.club_id, c.club_name
-            HAVING COUNT(DISTINCT e.event_id) >= %s
+                SELECT eventID, COUNT(*) AS attendance_count
+                FROM Students_Event_Attendees
+                WHERE timestamp >= %s
+                GROUP BY eventID
+            ) event_attendance ON e.eventID = event_attendance.eventID
+            WHERE e.startDateTime >= %s
+            GROUP BY c.clubID, c.name
+            HAVING COUNT(DISTINCT e.eventID) >= %s
             ORDER BY avg_attendance_per_event DESC
         """
-        cursor.execute(query, (days, min_events))
+
+        cursor.execute(query, (start_date_str, start_date_str, start_date_str, start_date_str, min_events))
         performance = cursor.fetchall()
         return jsonify(performance), 200
     except Error as e:

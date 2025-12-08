@@ -21,7 +21,7 @@ st.sidebar.markdown("**Current:** RSVPs")
 st.sidebar.page_link("pages/6_Sofia_My_Events.py", label="My Events")
 st.sidebar.page_link("pages/7_Sofia_Create_Event.py", label="Create Event")
 st.sidebar.page_link("pages/9_Sofia_Analytics.py", label="Analytics")
-st.sidebar.page_link("pages/10_Sofia_Collaborations.py", label="Collaborations")
+st.sidebar.page_link("pages/010_Sofia_Collaborations.py", label="Collaborations")
 st.sidebar.divider()
 st.sidebar.page_link("Home.py", label="← Back to Home")
 
