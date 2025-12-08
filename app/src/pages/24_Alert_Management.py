@@ -19,7 +19,6 @@ st.sidebar.page_link("pages/20_Admin_Home.py", label="Admin Home")
 st.sidebar.page_link("pages/22_System_Metrics.py", label="System Metrics")
 st.sidebar.page_link("pages/23_Audit_Logs.py", label="Audit Logs")
 st.sidebar.page_link("pages/25_Server_Management.py", label="Server Management")
-st.sidebar.page_link("pages/21_ML_Model_Mgmt.py", label="ML Model Management")
 st.sidebar.divider()
 st.sidebar.page_link("Home.py", label="← Back to Home")
 

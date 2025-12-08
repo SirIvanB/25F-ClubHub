@@ -8,7 +8,7 @@ admin_routes = Blueprint('admin_routes', __name__)
 
 
 # GET /admin/audit-logs
-@admin_routes.route('/admin/audit-logs', methods=['GET'])
+@admin_routes.route('/audit-logs', methods=['GET'])
 def get_audit_logs():
     """
     Return audit logs for authentication, event activity, and system actions.
@@ -45,7 +45,7 @@ def get_audit_logs():
 
 
 # GET /admin/alerts
-@admin_routes.route('/admin/alerts', methods=['GET'])
+@admin_routes.route('/alerts', methods=['GET'])
 def get_unresolved_alerts():
     """
     Return unresolved alerts (isSolved = FALSE).
@@ -79,7 +79,7 @@ def get_unresolved_alerts():
 
 
 # PUT /admin/alerts/<alert_id>
-@admin_routes.route('/admin/alerts/<int:alert_id>', methods=['PUT'])
+@admin_routes.route('/alerts/<int:alert_id>', methods=['PUT'])
 def resolve_alert(alert_id):
     """
     Resolve an alert by setting isSolved = TRUE.
@@ -109,7 +109,7 @@ def resolve_alert(alert_id):
 
 
 # /admin/documentation (STUBS ONLY)
-@admin_routes.route('/admin/documentation', methods=['GET'])
+@admin_routes.route('/documentation', methods=['GET'])
 def get_documentation_stub():
     """
     STUB: Documentation endpoint not implemented in current schema.
@@ -119,7 +119,7 @@ def get_documentation_stub():
     }), 501  # 501 Not Implemented
 
 
-@admin_routes.route('/admin/documentation', methods=['POST'])
+@admin_routes.route('/documentation', methods=['POST'])
 def create_documentation_stub():
     """
     STUB: Documentation endpoint not implemented in current schema.
@@ -129,7 +129,7 @@ def create_documentation_stub():
     }), 501  # 501 Not Implemented
 
 
-@admin_routes.route('/admin/documentation/<doc_id>', methods=['PUT'])
+@admin_routes.route('/documentation/<doc_id>', methods=['PUT'])
 def update_documentation_stub(doc_id):
     """
     STUB: Documentation endpoint not implemented in current schema.
@@ -141,7 +141,7 @@ def update_documentation_stub(doc_id):
 
 
 # GET /admin/metrics
-@admin_routes.route('/admin/metrics', methods=['GET'])
+@admin_routes.route('/metrics', methods=['GET'])
 def get_system_metrics():
     """
     Return system health metrics computed from Servers and EventLog.
