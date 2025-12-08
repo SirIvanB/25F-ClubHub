@@ -184,6 +184,8 @@ if submit_draft or submit_publish:
                     st.switch_page("pages/6_Sofia_My_Events.py")
             else:
                 st.error(f"Failed to create event: {response.status_code}")
+                st.code(response.text) 
+                st.json(response.json() if response.text else {})
                 
         except Exception as e:
             st.error(f"Could not connect to API: {e}")
