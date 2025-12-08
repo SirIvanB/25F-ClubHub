@@ -36,9 +36,13 @@ tab1, tab2 = st.tabs(["📆 Upcoming Events", "📜 Past Events"])
 @st.cache_data(ttl=60)
 def fetch_club_events(club_id):
     try:
-        response = requests.get(f"{API_BASE_URL}/clubs/{club_id}/events", timeout=5)
+        # Get all events and filter by clubID
+        response = requests.get(f"{API_BASE_URL}/events", timeout=5)
         if response.status_code == 200:
-            return response.json()
+            all_events = response.json()
+            # Filter for this club's events
+            club_events = [e for e in all_events if e.get('clubID') == club_id]
+            return club_events
         else:
             return []
     except Exception as e:
@@ -63,16 +67,23 @@ past_events = []
 
 for event in events:
     try:
-        start_dt_str = str(event.get('startDateTime', ''))
-        if 'GMT' in start_dt_str:
-            start_dt_str = start_dt_str.split(' GMT')[0]
-        event_date = datetime.strptime(start_dt_str, "%a, %d %b %Y %H:%M:%S")
-        
-        if event_date >= now:
-            upcoming_events.append(event)
+        # Parse datetime from database format
+        start_dt = event.get('startDateTime', '')
+        if start_dt:
+            # Handle datetime object or string
+            if isinstance(start_dt, str):
+                event_date = datetime.fromisoformat(start_dt.replace('Z', ''))
+            else:
+                event_date = start_dt
+            
+            if event_date >= now:
+                upcoming_events.append(event)
+            else:
+                past_events.append(event)
         else:
-            past_events.append(event)
-    except:
+            upcoming_events.append(event)
+    except Exception as e:
+        # If date parsing fails, add to upcoming
         upcoming_events.append(event)
 
 with tab1:
@@ -95,24 +106,28 @@ with tab1:
                     end_time = event.get('endDateTime', '')
                     if start_time:
                         try:
-                            dt_start = datetime.fromisoformat(str(start_time))
-                            dt_end = datetime.fromisoformat(str(end_time)) if end_time else None
+                            if isinstance(start_time, str):
+                                dt_start = datetime.fromisoformat(start_time.replace('Z', ''))
+                            else:
+                                dt_start = start_time
+                            
+                            if end_time:
+                                if isinstance(end_time, str):
+                                    dt_end = datetime.fromisoformat(end_time.replace('Z', ''))
+                                else:
+                                    dt_end = end_time
+                                formatted_end = dt_end.strftime("%I:%M %p")
+                            else:
+                                formatted_end = "TBD"
+                            
                             formatted_start = dt_start.strftime("%b %d, %Y at %I:%M %p")
-                            formatted_end = dt_end.strftime("%I:%M %p") if dt_end else "TBD"
                             st.markdown(f"📅 {formatted_start} - {formatted_end}")
                         except:
                             st.markdown(f"📅 {start_time}")
                     
                     # Location
                     location = event.get('location', 'TBD')
-                    building = event.get('buildingName', '')
-                    room = event.get('roomNumber', '')
-                    location_str = f"{location}"
-                    if building:
-                        location_str += f" - {building}"
-                    if room:
-                        location_str += f", Room {room}"
-                    st.markdown(f"📍 {location_str}")
+                    st.markdown(f"📍 {location}")
                     
                     # Capacity
                     capacity = event.get('capacity')
@@ -153,7 +168,10 @@ with tab2:
                     start_time = event.get('startDateTime', '')
                     if start_time:
                         try:
-                            dt = datetime.fromisoformat(str(start_time))
+                            if isinstance(start_time, str):
+                                dt = datetime.fromisoformat(start_time.replace('Z', ''))
+                            else:
+                                dt = start_time
                             formatted_date = dt.strftime("%b %d, %Y")
                             st.markdown(f"📅 {formatted_date}")
                         except:
