@@ -94,7 +94,7 @@ else:
                 # Rename columns for display
                 column_names = {
                     'club_name': 'Club Name',
-                    'curriculum': 'Description',
+                    'curriculum': 'Curator',
                     'budget': 'Budget ($)',
                     'number_of_members': 'Members',
                     'benefits': 'Benefits',
@@ -118,8 +118,8 @@ else:
                 
                 with col1:
                     st.markdown("**Budget Comparison**")
-                    budget_chart = comparison_df[['Club Name', 'Budget ($)']].set_index('Club Name')
-                    st.bar_chart(budget_chart)
+                    budget_chart = comparison_df[['Club Name', 'Budget ($)']].sort_values('Budget ($)', ascending=False).set_index('Club Name')
+                    st.bar_chart(budget_chart, height=500, use_container_width=True)
                 
                 with col2:
                     st.markdown("**Member Count Comparison**")

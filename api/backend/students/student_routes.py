@@ -29,21 +29,20 @@ def get_student_rsvps(student_id):
         cursor = db.cursor(dictionary=True)
         query = """
             SELECT 
-                r.rsvp_id,
-                e.event_id,
-                e.event_name,
-                e.start_datetime,
+                r.rsvpID as rsvp_id,
+                e.eventID as event_id,
+                e.name as event_name,
+                e.startDateTime as start_datetime,
                 e.location,
-                e.last_updated,
-                c.club_name
-                FROM RSVPs r
-                    JOIN Events e ON r.event_id = e.event_id
-                    JOIN Clubs c ON e.club_id = c.club_id
-                WHERE r.student_id = %s
-                    AND e.start_datetime > CURRENT_TIMESTAMP
-                    AND r.status = 'confirmed'
-                ORDER BY e.start_datetime ASC;
-
+                e.lastUpdated as last_updated,
+                c.name as club_name
+            FROM RSVPs r
+            JOIN Events e ON r.eventID = e.eventID
+            JOIN Clubs c ON e.clubID = c.clubID
+            WHERE r.studentID = %s
+                AND e.startDateTime > CURRENT_TIMESTAMP
+                AND r.status = 'confirmed'
+            ORDER BY e.startDateTime ASC
         """
         cursor.execute(query, (student_id,))
         rsvps = cursor.fetchall()
@@ -66,12 +65,35 @@ def create_rsvp(student_id):
             VALUES 
                 (%s, %s, 'confirmed', CURRENT_TIMESTAMP)
         """
-        cursor.execute(query, (data['event_id'], student_id))
+        cursor.execute(query, (student_id, data['event_id']))
         db.commit()
         return jsonify({"message": "RSVP created successfully"}), 201
     except Error as e:
         current_app.logger.error(f"Error creating RSVP: {e}")
         return jsonify({"error": "Error creating RSVP"}), 500
+    finally:
+        cursor.close()
+
+# Cancel RSVP
+@student_routes.route('/students/<student_id>/rsvps/<int:rsvp_id>', methods=['DELETE'])
+def cancel_rsvp(student_id, rsvp_id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+            DELETE FROM RSVPs
+            WHERE rsvpID = %s AND studentID = %s
+        """
+        cursor.execute(query, (rsvp_id, student_id))
+        db.commit()
+
+        if cursor.rowcount > 0:
+            return jsonify({"message": "RSVP cancelled successfully"}), 200
+        else:
+            return jsonify({"error": "RSVP not found"}), 404
+
+    except Error as e:
+        current_app.logger.error(f"Error cancelling RSVP: {e}")
+        return jsonify({"error": "Error cancelling RSVP"}), 500
     finally:
         cursor.close()
 
@@ -82,20 +104,20 @@ def get_student_invitations(student_id):
         cursor = db.cursor(dictionary=True)
         query = """
             SELECT 
-                ei.invitation_id,
-                ei.event_id,
-                e.event_name,
-                e.start_datetime,
-                ei.sender_student_id,
-                s.first_name AS sender_first_name,
-                s.last_name AS sender_last_name,
-                ei.invitation_status,
-                ei.sent_datetime
+                ei.invitationID as invitation_id,
+                ei.eventID as event_id,
+                e.name as event_name,
+                e.startDateTime as start_datetime,
+                ei.senderStudentID as sender_student_id,
+                s.firstName AS sender_first_name,
+                s.lastName AS sender_last_name,
+                ei.status as invitation_status,
+                ei.sentAt as sent_datetime
             FROM Event_Invitations ei
-            JOIN Events e ON ei.event_id = e.event_id
-            JOIN Students s ON ei.sender_student_id = s.student_id
-            WHERE ei.recipient_student_id = %s
-            ORDER BY ei.sent_datetime DESC
+            JOIN Events e ON ei.eventID = e.eventID
+            JOIN Students s ON ei.senderStudentID = s.studentID
+            WHERE ei.recipientStudentID = %s
+            ORDER BY ei.sentAt DESC
         """
         cursor.execute(query, (student_id,))
         invitations = cursor.fetchall()
@@ -106,20 +128,59 @@ def get_student_invitations(student_id):
     finally:
         cursor.close()
 
+# Get student invitations (sent + received)
+@student_routes.route('/students/<student_id>/invitations/all', methods=['GET'])
+def get_all_student_invitations(student_id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+            SELECT 
+                ei.invitationID AS invitation_id,
+                ei.eventID AS event_id,
+                e.name AS event_name,
+                e.startDateTime AS start_datetime,
+                ei.senderStudentID AS sender_student_id,
+                ei.recipientStudentID AS recipient_student_id,
+                s.firstName AS sender_first_name,
+                s.lastName AS sender_last_name,
+                ei.status AS invitation_status,
+                ei.sentAt AS sent_datetime
+            FROM Event_Invitations ei
+            JOIN Events e ON ei.eventID = e.eventID
+            JOIN Students s ON ei.senderStudentID = s.studentID
+            WHERE ei.senderStudentID = %s
+               OR ei.recipientStudentID = %s
+            ORDER BY ei.sentAt DESC
+        """
+        cursor.execute(query, (student_id, student_id))
+        invitations = cursor.fetchall()
+        return jsonify(invitations), 200
+    except Error as e:
+        current_app.logger.error(f"Error fetching all invitations: {e}")
+        return jsonify({"error": "Error fetching invitations"}), 500
+    finally:
+        cursor.close()
+
 # Update invitation status
-@student_routes.route('/students/<student_id>/invitations/<invitation_id>', methods=['PUT'])
+@student_routes.route('/students/<student_id>/invitations/<int:invitation_id>', methods=['PUT'])
 def update_invitation_status(student_id, invitation_id):
     try:
         data = request.get_json()
         cursor = db.cursor(dictionary=True)
         query = """
             UPDATE Event_Invitations 
-            SET invitation_status = %s, updated_datetime = CURRENT_TIMESTAMP
-            WHERE invitation_id = %s AND recipient_student_id = %s
+            SET status = %s
+            WHERE invitationID = %s
+              AND recipientStudentID = %s
         """
         cursor.execute(query, (data['status'], invitation_id, student_id))
         db.commit()
-        return jsonify({"message": "Invitation status updated successfully"}), 200
+
+        if cursor.rowcount > 0:
+            return jsonify({"message": "Invitation status updated successfully"}), 200
+        else:
+            return jsonify({"error": "Invitation not found"}), 404
+
     except Error as e:
         current_app.logger.error(f"Error updating invitation: {e}")
         return jsonify({"error": "Error updating invitation"}), 500

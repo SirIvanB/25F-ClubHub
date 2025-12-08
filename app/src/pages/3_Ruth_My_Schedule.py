@@ -13,7 +13,7 @@ st.set_page_config(
 API_BASE_URL = "http://web-api:4000"
 
 # Hardcoded student ID (will come from auth later)
-STUDENT_ID = 1
+STUDENT_ID = 10000001
 
 # Sidebar navigation
 st.sidebar.title("🎒 Ruth's Pages")
@@ -34,7 +34,7 @@ st.divider()
 def fetch_my_rsvps():
     try:
         response = requests.get(
-            f"{API_BASE_URL}/students/{STUDENT_ID}/rsvps", 
+            f"{API_BASE_URL}/students/students/{STUDENT_ID}/rsvps", 
             timeout=5
         )
         if response.status_code == 200:
@@ -48,13 +48,13 @@ def fetch_my_rsvps():
 # Get RSVPs
 my_events = fetch_my_rsvps()
 
-# Check for recent updates (events that were recently updated)
-recent_updates = [e for e in my_events if e.get('last_updated')]
-if recent_updates:
-    st.markdown("### 🔔 Recent Updates")
-    for event in recent_updates[:3]:  # Show max 3 updates
-        st.info(f"⚠️ **{event.get('event_name')}** was recently updated")
-    st.divider()
+## Check for recent updates (events that were recently updated)
+#recent_updates = [e for e in my_events if e.get('last_updated')]
+#if recent_updates:
+#    st.markdown("### 🔔 Recent Updates")
+#    for event in recent_updates[:3]:  # Show max 3 updates
+#        st.info(f"⚠️ **{event.get('event_name')}** was recently updated")
+#    st.divider()
 
 # Display events
 if not my_events:
@@ -79,7 +79,7 @@ else:
             
             with col1:
                 # Club name
-                st.markdown(f"**🎭 {event.get('club_name', 'Unknown Club')}**")
+                st.markdown(f"**⏰ {event.get('club_name', 'Unknown Club')}**")
                 
                 # Date and time
                 start_time = event.get('start_datetime', '')
@@ -116,10 +116,20 @@ else:
                     # In real app, this would show a map or navigation
                 
                 if st.button("❌ Cancel RSVP", key=f"cancel_{event.get('rsvp_id')}", use_container_width=True):
-                    st.warning("RSVP cancelled (would call DELETE API here)")
-                    # Would call: DELETE /students/{id}/rsvps/{rsvp_id}
-                    st.cache_data.clear()
-                    st.rerun()
+                    rsvp_id = event.get('rsvp_id')
+                    try:
+                        resp = requests.delete(
+                            f"{API_BASE_URL}/students/students/{STUDENT_ID}/rsvps/{rsvp_id}", timeout=5)
+                        if resp.status_code == 200:
+                            st.success("RSVP cancelled.")
+                            st.cache_data.clear()
+                            st.rerun()
+                        elif resp.status_code == 404:
+                            st.error("RSVP not found. It may have already been cancelled.")
+                        else:
+                            st.error(f"Failed to cancel RSVP (status {resp.status_code}).")
+                    except Exception as e:
+                        st.error(f"Failed to cancel RSVP: {e}")
         
         st.markdown("")  # Spacing between events
 

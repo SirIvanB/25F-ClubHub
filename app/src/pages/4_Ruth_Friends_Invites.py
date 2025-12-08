@@ -10,17 +10,14 @@ st.set_page_config(
 # API Base URL
 API_BASE_URL = "http://web-api:4000"
 
-# TODO: REPLACE WITH REAL AUTHENTICATION!
-# Hardcoded student ID for testing - MUST update this when adding login system
-# Should be: STUDENT_ID = st.session_state.get('user_id')
-STUDENT_ID = 1  # ⚠️ TEMPORARY - COME BACK TO THIS!
+STUDENT_ID = 10000001
 
 # Sidebar navigation
 st.sidebar.title("🎒 Ruth's Pages")
 st.sidebar.page_link("pages/1_Ruth_Event_Discovery.py", label="Event Discovery")
 st.sidebar.page_link("pages/2_Ruth_Club_Comparison.py", label="Club Comparison")
-st.sidebar.markdown("**Current:** My Schedule")
-st.sidebar.page_link("pages/4_Ruth_Friends_Invites.py", label="Friends & Invites")
+st.sidebar.page_link("pages/3_Ruth_My_Schedule.py", label="My Schedule")
+st.sidebar.markdown("**Current:** Friends & Invites")  # 👈 correct page
 st.sidebar.page_link("pages/5_Ruth_Club_Rankings.py", label="Club Rankings")
 st.sidebar.divider()
 st.sidebar.page_link("Home.py", label="← Back to Home")
@@ -34,7 +31,9 @@ st.divider()
 def fetch_invitations():
     try:
         response = requests.get(
-            f"{API_BASE_URL}/students/{STUDENT_ID}/invitations",
+            #f"{API_BASE_URL}/students/students/{STUDENT_ID}/invitations",
+            #f"{API_BASE_URL}/students/{STUDENT_ID}/invitations/all",
+            f"{API_BASE_URL}/students/students/{STUDENT_ID}/invitations/all", 
             timeout=5)
         if response.status_code == 200:
             return response.json()
@@ -48,20 +47,20 @@ def fetch_invitations():
 @st.cache_data(ttl=30)
 def fetch_my_events():
     try:
-        response = requests.get(
-            f"{API_BASE_URL}/students/{STUDENT_ID}/rsvps", timeout=5)
+        response = requests.get(f"{API_BASE_URL}/students/students/{STUDENT_ID}/rsvps", timeout=5)
         if response.status_code == 200:
             return response.json()
         else:
             return []
     except Exception as e:
+        # we can skip showing an error here to avoid double messages on the page
         return []
 
 # Fetch all students (for suggested students dropdown)
 @st.cache_data(ttl=60)
 def fetch_all_students():
     try:
-        response = requests.get(f"{API_BASE_URL}/students", timeout=5)
+        response = requests.get(f"{API_BASE_URL}/students/students", timeout=5)
         if response.status_code == 200:
             students = response.json()
             # Filter out current user
@@ -75,7 +74,7 @@ def fetch_all_students():
 def update_invitation(invitation_id, new_status):
     try:
         response = requests.put(
-            f"{API_BASE_URL}/students/{STUDENT_ID}/invitations/{invitation_id}",
+            f"{API_BASE_URL}/students/students/{STUDENT_ID}/invitations/{invitation_id}",
             json={"status": new_status},
             timeout=5
         )
@@ -88,13 +87,16 @@ def update_invitation(invitation_id, new_status):
 def send_invitation(event_id, recipient_id):
     try:
         response = requests.post(
-            f"{API_BASE_URL}/invitations",
+            f"{API_BASE_URL}/invitations/invitations",
             json={
                 "event_id": event_id,
                 "sender_student_id": STUDENT_ID,
                 "recipient_student_id": recipient_id
             },
             timeout=5)
+        if response.status_code != 201:
+            # Show more debugging info
+            st.error(f"Send failed: status {response.status_code}, body: {response.text}")
         return response.status_code == 201
     except Exception as e:
         st.error(f"Error sending invitation: {e}")
@@ -105,38 +107,62 @@ invitations = fetch_invitations()
 my_events = fetch_my_events()
 all_students = fetch_all_students()
 
-# Section 1: Incoming Invitations
-st.markdown("### 📬 Incoming Invitations")
+# Section 1: Invitation Status
+st.markdown("### 📊 Invitation Status")
 
-pending_invitations = [inv for inv in invitations if inv.get('invitation_status') == 'pending']
+# Split sent vs received
+sent_invitations = [inv for inv in invitations if inv.get('sender_student_id') == STUDENT_ID]
+received_invitations = [inv for inv in invitations if inv.get('recipient_student_id') == STUDENT_ID]
 
-if not pending_invitations:
-    st.info("No pending invitations at the moment.")
-else:
-    st.markdown(f"You have **{len(pending_invitations)}** pending invitation(s)")
+sent_pending   = [inv for inv in sent_invitations if inv.get('invitation_status') == 'pending']
+sent_accepted  = [inv for inv in sent_invitations if inv.get('invitation_status') == 'accepted']
+sent_declined  = [inv for inv in sent_invitations if inv.get('invitation_status') == 'declined']
 
-    for invitation in pending_invitations:
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("Sent", len(sent_invitations))
+with col2:
+    st.metric("Pending", len(sent_pending))
+with col3:
+    st.metric("Accepted", len(sent_accepted))
+with col4:
+    st.metric("Declined", len(sent_declined))
+
+# Optional: only show incoming list if there is actually something to act on
+pending_incoming = [
+    inv for inv in received_invitations
+    if inv.get('invitation_status') == 'pending'
+]
+
+if pending_incoming:
+    st.markdown("### 📬 Incoming Invitations")
+
+    for invitation in pending_incoming:
         with st.container(border=True):
             col1, col2 = st.columns([3, 1])
-    
+
             with col1:
                 sender_name = f"{invitation.get('sender_first_name', '')} {invitation.get('sender_last_name', '')}"
                 event_name = invitation.get('event_name', 'Unknown Event')
                 event_date = invitation.get('start_datetime', '')
-                
+
                 st.markdown(f"**{sender_name}** invited you to:")
                 st.markdown(f"🎉 **{event_name}**")
                 if event_date:
                     st.markdown(f"📅 {event_date}")
 
             with col2:
-                if st.button("✅ Accept", key=f"accept_{invitation.get('invitation_id')}", use_container_width=True):
+                if st.button("✅ Accept",
+                             key=f"accept_{invitation.get('invitation_id')}",
+                             use_container_width=True):
                     if update_invitation(invitation.get('invitation_id'), 'accepted'):
                         st.success("Accepted!")
                         st.cache_data.clear()
                         st.rerun()
-                
-                if st.button("❌ Decline", key=f"decline_{invitation.get('invitation_id')}", use_container_width=True):
+
+                if st.button("❌ Decline",
+                             key=f"decline_{invitation.get('invitation_id')}",
+                             use_container_width=True):
                     if update_invitation(invitation.get('invitation_id'), 'declined'):
                         st.warning("Declined")
                         st.cache_data.clear()

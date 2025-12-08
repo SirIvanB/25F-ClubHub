@@ -63,7 +63,7 @@ st.divider()
 def create_rsvp(event_id, event_name):
     try:
         response = requests.post(
-            f"{API_BASE_URL}/students/{STUDENT_ID}/rsvps",
+            f"{API_BASE_URL}/students/students/{STUDENT_ID}/rsvps",
             json={"event_id": event_id},
             timeout=5
         )
