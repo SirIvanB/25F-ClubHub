@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS ClubHub;
 CREATE DATABASE ClubHub;
 USE ClubHub;
 
--- Students Table (with year and major from teammate's version)
+-- Students Table
 CREATE TABLE Students (
    studentID INT PRIMARY KEY,
    email VARCHAR(100) UNIQUE NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE Categories (
    name VARCHAR(100) NOT NULL
 );
 
--- Clubs Table (MERGED: budget + competitiveness_level + type)
+-- Clubs Table
 CREATE TABLE Clubs (
    clubID INT PRIMARY KEY,
    name VARCHAR(100) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE Clubs (
    FOREIGN KEY (categoryID) REFERENCES Categories(categoryID)
 );
 
--- Events Table (teammate's more complete version)
+-- Events Table
 CREATE TABLE Events (
    eventID INT PRIMARY KEY,
    name VARCHAR(100) NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE Events (
    FOREIGN KEY (clubID) REFERENCES Clubs(clubID)
 );
 
--- Club Memberships Table (ADDED from your version)
+-- Club Memberships Table
 CREATE TABLE club_memberships (
    membership_id INT PRIMARY KEY AUTO_INCREMENT,
    club_id INT NOT NULL,
@@ -224,7 +224,7 @@ CREATE TABLE Minor (
    FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
 );
 
--- RSVP Table (from teammate's version)
+-- RSVP Table
 CREATE TABLE RSVPs (
    rsvpID INT PRIMARY KEY AUTO_INCREMENT,
    studentID INT NOT NULL,
@@ -236,7 +236,7 @@ CREATE TABLE RSVPs (
    UNIQUE KEY unique_rsvp (studentID, eventID)
 );
 
--- Event Invitations (merged table names)
+-- Event Invitations
 CREATE TABLE Event_Invitations (
    invitationID INT PRIMARY KEY AUTO_INCREMENT,
    eventID INT NOT NULL,
@@ -249,7 +249,7 @@ CREATE TABLE Event_Invitations (
    FOREIGN KEY (recipientStudentID) REFERENCES Students(studentID) ON DELETE CASCADE
 );
 
--- Feedback Table (from teammate's version)
+-- Feedback Table
 CREATE TABLE Feedback (
    feedbackID INT PRIMARY KEY AUTO_INCREMENT,
    eventID INT NOT NULL,
@@ -261,7 +261,7 @@ CREATE TABLE Feedback (
    FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE CASCADE
 );
 
--- Venues Table (from teammate's version)
+-- Venues Table
 CREATE TABLE Venues (
    venueID INT PRIMARY KEY AUTO_INCREMENT,
    name VARCHAR(100) NOT NULL,
@@ -271,7 +271,7 @@ CREATE TABLE Venues (
    FOREIGN KEY (locationID) REFERENCES Locations(locationID) ON DELETE SET NULL
 );
 
--- Audit Logs Table (from teammate's version)
+-- Audit Logs Table
 CREATE TABLE Audit_Logs (
    logID INT PRIMARY KEY AUTO_INCREMENT,
    userID INT,
@@ -294,6 +294,7 @@ CREATE TABLE Searches(
     FOREIGN KEY (studentID) REFERENCES Students(studentID)
 );
 
+-- Search Results Table
 CREATE TABLE Search_Result(
     resultID int PRIMARY KEY,
     clicks int,
@@ -310,7 +311,7 @@ CREATE TABLE Searches_Search_Results(
     FOREIGN KEY (resultID) REFERENCES Search_Result(resultID)
 );
 
--- Search Logs Table (from teammate's version)
+-- Search Logs Table
 CREATE TABLE Search_Logs (
    searchLogID INT PRIMARY KEY AUTO_INCREMENT,
    studentID INT,
@@ -320,7 +321,7 @@ CREATE TABLE Search_Logs (
    FOREIGN KEY (studentID) REFERENCES Students(studentID) ON DELETE SET NULL
 );
 
--- System Metrics Table (from teammate's version)
+-- System Metrics Table 
 CREATE TABLE System_Metrics (
    metricID INT PRIMARY KEY AUTO_INCREMENT,
    metricName VARCHAR(100) NOT NULL,
@@ -332,7 +333,7 @@ CREATE TABLE System_Metrics (
    thresholdCritical DECIMAL(10,2)
 );
 
--- System Alerts Table (from teammate's version)
+-- System Alerts Table 
 CREATE TABLE System_Alerts (
    alertID INT PRIMARY KEY AUTO_INCREMENT,
    alertType VARCHAR(50) NOT NULL,
@@ -343,7 +344,7 @@ CREATE TABLE System_Alerts (
    resolvedAt DATETIME
 );
 
--- Documentation Table (from teammate's version)
+-- Documentation Table
 CREATE TABLE Documentation (
    documentID INT PRIMARY KEY AUTO_INCREMENT,
    title VARCHAR(200) NOT NULL,
@@ -354,7 +355,7 @@ CREATE TABLE Documentation (
    updatedByUserID INT
 );
 
--- Engagement Reports Table (from teammate's version)
+-- Engagement Reports Table 
 CREATE TABLE Engagement_Reports (
    reportID INT PRIMARY KEY AUTO_INCREMENT,
    reportPeriodStart DATE NOT NULL,
@@ -367,7 +368,7 @@ CREATE TABLE Engagement_Reports (
    generatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Club Categories Junction Table (from teammate's version)
+-- Club Categories Junction Table
 CREATE TABLE Club_Categories (
    clubID INT NOT NULL,
    categoryID INT NOT NULL,
@@ -435,7 +436,7 @@ INSERT INTO Categories (categoryID, name) VALUES
 (40000007, 'Social'),
 (40000008, 'Special Interest');
 
--- Insert Clubs (WITH budget, competitiveness_level, and type)
+-- Insert Clubs
 INSERT INTO Clubs (clubID, name, email, adviser, categoryID, type, budget, competitiveness_level) VALUES
 (50000001, 'Husky Hackers', 'huskyhackers@northeastern.edu', 'Dr. Robert Chen', 40000001, 'Academic', 12000.00, 8),
 (50000002, 'Northeastern Dance Collective', 'nudance@northeastern.edu', 'Prof. Maria Santos', 40000003, 'Arts', 8500.00, 6),
@@ -484,7 +485,7 @@ INSERT INTO Locations (locationID, capacity, buildingName, buildingNumber, floor
 (60000009, 120, 'Forsyth Building', 'FB', 5),
 (60000010, 60, 'Ryder Hall', 'RY', 2);
 
--- Insert Events (with all fields)
+-- Insert Events 
 INSERT INTO Events (eventID, name, description, searchDescription, startDateTime, endDateTime, authID, clubID, capacity, location, buildingName, roomNumber) VALUES
 (70000001, 'Intro to Web Development Workshop', 'Learn the basics of HTML, CSS, and JavaScript', 'web development html css javascript workshop coding', '2025-11-10 18:00:00', '2025-11-10 20:00:00', 10000001, 50000001, 80, 'West Village H 210', 'West Village H', '210'),
 (70000002, 'Winter Dance Showcase', 'Annual performance featuring various dance styles', 'dance performance showcase contemporary hip-hop ballet', '2025-11-15 19:00:00', '2025-11-15 21:30:00', 10000002, 50000002, 200, 'Curry Student Center Ballroom', 'Curry Student Center', 'Ballroom'),
@@ -498,6 +499,7 @@ INSERT INTO Events (eventID, name, description, searchDescription, startDateTime
 (70000010, 'Robotics Competition Prep', 'Final preparation for regional competition', 'robotics engineering competition programming stem technology', '2025-09-07 10:00:00', '2025-09-07 14:00:00', 10000010, 50000010, 50, 'Forsyth Building Lab', 'Forsyth Building', '301'),
 (70000011, 'Hackathon 2024', '24-hour coding competition with prizes', 'hackathon coding programming competition innovation software', '2025-12-20 09:00:00', '2025-12-21 09:00:00', 10000001, 50000001, 100, 'West Village H Commons', 'West Village H', 'Commons'),
 (70000012, 'Investment Panel Discussion', 'Alumni share career insights in finance', 'finance career alumni networking investment banking', '2025-12-18 18:30:00', '2025-12-18 20:00:00', 10000003, 50000003, 75, 'Ryder Hall 155', 'Ryder Hall', '155');
+
 -- Insert Servers
 INSERT INTO Servers (serverID, status, ipAddress, lastUpdated) VALUES
 (80000001, 'active', '192.168.1.10', '2024-12-06 08:00:00'),
@@ -689,7 +691,7 @@ INSERT INTO Minor (minorID, studentID) VALUES
 (30000002, 10000014),
 (30000004, 10000015);
 
--- Insert Event Invitations (using new table name)
+-- Insert Event Invitations
 INSERT INTO Event_Invitations (eventID, senderStudentID, recipientStudentID, status, sentAt) VALUES
 (70000001, 10000001, 10000003, 'accepted', '2024-12-05 14:00:00'),
 (70000001, 10000001, 10000011, 'accepted', '2024-12-05 14:15:00'),
@@ -702,7 +704,7 @@ INSERT INTO Event_Invitations (eventID, senderStudentID, recipientStudentID, sta
 (70000011, 10000001, 10000014, 'accepted', '2024-12-06 08:00:00'),
 (70000011, 10000003, 10000008, 'pending', '2024-12-06 10:00:00');
 
--- Insert Searches (50 searches over 90 days)
+-- Insert Searches
 INSERT INTO Searches (searchID, timestamp, searchQuery, studentID) VALUES
 (1, '2025-09-15 10:30:00', 'web development', 10000001),
 (2, '2025-09-16 14:20:00', 'web development', 10000002),
