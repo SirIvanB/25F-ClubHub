@@ -16,8 +16,6 @@ API_BASE_URL = "http://web-api:4000"
 # Sidebar navigation
 st.sidebar.title("🖥️ David's Pages")
 st.sidebar.markdown("**Current:** Admin Home")
-st.sidebar.page_link("pages/26_Admin_Demo.py", label="🎯 Demo & Pitch", icon="🎯")
-st.sidebar.divider()
 st.sidebar.page_link("pages/22_System_Metrics.py", label="System Metrics")
 st.sidebar.page_link("pages/23_Audit_Logs.py", label="Audit Logs")
 st.sidebar.page_link("pages/24_Alert_Management.py", label="Alert Management")
@@ -119,19 +117,14 @@ st.divider()
 # Quick Actions
 st.markdown("### ⚡ Quick Actions")
 
-action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+action_col1, action_col2, action_col3 = st.columns(3)
 
 with action_col1:
-    if st.button('🎯 Demo & Pitch', type='primary', use_container_width=True):
-        st.switch_page('pages/26_Admin_Demo.py')
-    st.markdown("**Presentation-ready demo** of all admin features")
-
-with action_col2:
     if st.button('📊 View System Metrics', type='primary', use_container_width=True):
         st.switch_page('pages/22_System_Metrics.py')
     st.markdown("Monitor real-time server health and performance")
 
-with action_col3:
+with action_col2:
     if st.button('🚨 Manage Alerts', type='primary', use_container_width=True):
         st.switch_page('pages/24_Alert_Management.py')
     alert_count = len(alerts)
@@ -140,7 +133,7 @@ with action_col3:
     else:
         st.markdown("✓ No unresolved alerts")
 
-with action_col4:
+with action_col3:
     if st.button('📋 View Audit Logs', type='primary', use_container_width=True):
         st.switch_page('pages/23_Audit_Logs.py')
     st.markdown("Review system activity and authentication logs")
