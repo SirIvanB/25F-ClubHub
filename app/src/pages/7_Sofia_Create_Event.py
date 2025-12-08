@@ -122,45 +122,27 @@ if submit_draft or submit_publish:
     # Validation
     if not event_name or not event_description or not location:
         st.error("⚠️ Please fill in all required fields (marked with *)")
+        if not event_name:
+            st.error("Missing: Event Title")
+        if not event_description:
+            st.error("Missing: Description")
+        if not location:
+            st.error("Missing: Location")
     else:
         # Combine date and time
         start_datetime = datetime.combine(event_date, start_time)
         end_datetime = datetime.combine(event_date, end_time)
         
-        # Check for conflicts
-        conflicts = fetch_conflicting_events(
-            start_datetime.isoformat(),
-            end_datetime.isoformat(),
-            CLUB_ID
-        )
-        
-        if conflicts:
-            st.warning(f"⚠️ Warning: {len(conflicts)} conflicting events found at the same time")
-            
-            with st.expander("View Conflicting Events", expanded=True):
-                for conflict in conflicts:
-                    st.markdown(f"**{conflict.get('name')}** - {conflict.get('club_name')}")
-                    st.markdown(f"📍 {conflict.get('location')} | 👥 {conflict.get('expected_attendance', 'N/A')} expected")
-                    st.divider()
-        
-        # Create event data
+        # Create event data matching Flask API requirements
         event_data = {
-            "club_id": CLUB_ID,
-            "event_name": event_name,
-            "event_description": event_description,
-            "event_type": event_type,
-            "category": category,
-            "start_datetime": start_datetime.isoformat(),
-            "end_datetime": end_datetime.isoformat(),
-            "location": location,
-            "building_name": building_name,
-            "room_number": room_number,
-            "capacity": capacity,
-            "created_by_user_id": USER_ID,
-            "tags": ",".join(tags),
-            "require_rsvp": require_rsvp,
-            "enable_checkin": enable_checkin,
-            "status": "published" if submit_publish else "draft"
+            "name": str(event_name).strip(),
+            "description": str(event_description).strip(),
+            "startDateTime": start_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "endDateTime": end_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "location": str(location).strip(),
+            "capacity": int(capacity),
+            "clubID": int(CLUB_ID),
+            "eventType": str(event_type)
         }
         
         # Submit to API
@@ -184,8 +166,11 @@ if submit_draft or submit_publish:
                     st.switch_page("pages/6_Sofia_My_Events.py")
             else:
                 st.error(f"Failed to create event: {response.status_code}")
-                st.code(response.text) 
-                st.json(response.json() if response.text else {})
+                try:
+                    error_detail = response.json()
+                    st.write("Error details:", error_detail)
+                except:
+                    st.write("Error response:", response.text)
                 
         except Exception as e:
             st.error(f"Could not connect to API: {e}")
