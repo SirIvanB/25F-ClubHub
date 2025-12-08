@@ -395,3 +395,31 @@ def get_event_validation():
     except Error as e:
         current_app.logger.error(f'Error in get_event_validation: {str(e)}')
         return jsonify({"error": str(e)}), 500
+    
+    # DELETE /events/{id} - Delete an event
+@events.route("/events/<int:event_id>", methods=["DELETE"])
+def delete_event(event_id):
+    """Delete an event by ID"""
+    cursor = None
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        # First check if event exists
+        cursor.execute("SELECT * FROM Events WHERE eventID = %s", (event_id,))
+        event = cursor.fetchone()
+        
+        if not event:
+            return jsonify({"error": "Event not found"}), 404
+        
+        # Delete the event
+        cursor.execute("DELETE FROM Events WHERE eventID = %s", (event_id,))
+        db.commit()
+        
+        return jsonify({"message": "Event deleted successfully"}), 200
+        
+    except Error as e:
+        current_app.logger.error(f'Error in delete_event: {str(e)}')
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
